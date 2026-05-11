@@ -7,6 +7,13 @@ services:
     restart: always
     expose:
       - 8008
+    environment:
+      - SYNAPSE_REGISTRATION_SHARED_SECRET=${REG_SECRET}
+      - SYNAPSE_MACAROON_SECRET_KEY=${MACAROON_SECRET}
+      - SYNAPSE_FORM_SECRET=${FORM_SECRET}
+      - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
+      - SYNAPSE_RECAPTCHA_PUBLIC_KEY=${RECAPTCHA_PUBLIC}
+      - SYNAPSE_RECAPTCHA_PRIVATE_KEY=${RECAPTCHA_PRIVATE}
     volumes:
       - ./matrix/data:/data
     
