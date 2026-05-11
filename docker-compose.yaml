@@ -1,0 +1,25 @@
+version: "3.3"
+
+services:
+  synapse:
+    container_name: synapse
+    image: matrixdotorg/synapse:v1.152.1
+    restart: always
+    expose:
+      - 8008
+    volumes:
+      - ./matrix/data:/data
+    
+  nginx:
+    image: nginx:stable
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - synapse
