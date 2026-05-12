@@ -31,4 +31,4 @@ else
     echo "Файлы успешно сгенерированы и права настроены."
 fi
 
-chmod +x scripts/create_synapse_admin.sh
+chmod +x scripts/create_admin.sh
