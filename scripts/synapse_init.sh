@@ -1,4 +1,7 @@
 #!/bin/bash
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
 
 OS_TYPE="$(uname -s)"
 
