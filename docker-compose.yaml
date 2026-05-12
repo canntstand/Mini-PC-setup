@@ -23,6 +23,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    restart: always
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     volumes:
