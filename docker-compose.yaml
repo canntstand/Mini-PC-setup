@@ -12,13 +12,11 @@ services:
     image: nginx:stable
     container_name: nginx_proxy
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
     restart: always
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     volumes:
       - ./nginx/templates/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
     depends_on:
       - synapse

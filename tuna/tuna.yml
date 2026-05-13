@@ -1,0 +1,8 @@
+version: "1"
+location: ru
+
+tunnels:
+  matrix:
+    commandLine: tuna http 8080 --domain=домен --https-redirect
+  ssh:
+    commandLine: tuna tcp 22 --port=myssh
