@@ -7,7 +7,7 @@ services:
       - 8008
     volumes:
       - ./matrix/data:/data
-    
+
   nginx:
     image: nginx:stable
     container_name: nginx_proxy
@@ -20,3 +20,16 @@ services:
       - ./nginx/templates/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
     depends_on:
       - synapse
+
+  tuna:
+    container_name: tuna_tunnel
+    image: yuccastream/tuna:latest
+    restart: always
+    network_mode: "host"
+    environment:
+      - TUNA_TOKEN=${TUNA_TOKEN}
+      - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
+    command: >
+      sh -c "tuna http 8080 --domain=$${SYNAPSE_SERVER_NAME} --subdomains --https-redirect & 
+      tuna tcp 22 --port=frolov-ssh & 
+      wait"
