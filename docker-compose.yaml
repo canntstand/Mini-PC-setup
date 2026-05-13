@@ -20,6 +20,8 @@ services:
       - ./nginx/templates/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
     depends_on:
       - synapse
+      - navidrome
+      - audiobookshelf
 
   tuna_matrix:
     container_name: tuna_matrix
@@ -41,3 +43,32 @@ services:
     environment:
       - TUNA_TOKEN=${TUNA_TOKEN}
     command: tcp 22 --port=frolov-ssh
+
+  navidrome:
+    container_name: navidrome
+    image: deluan/navidrome:latest
+    restart: always
+    expose:
+      - 4533
+    environment:
+      ND_SCANINTERVAL: "1m"
+      ND_LOGLEVEL: "info"
+      ND_BASEURL: "/music"
+    volumes:
+      - ./navidrome/data:/data
+      - /home/r9888/Music:/music:ro
+
+  audiobookshelf:
+    container_name: audiobookshelf
+    image: advrh/audiobookshelf:latest
+    restart: always
+    expose:
+      - 80
+    environment:
+      - AUDIOBOOKSHELF_PORT=80
+      - TONE_PATH=/books
+    volumes:
+      - ./audiobookshelf/config:/config
+      - ./audiobookshelf/metadata:/metadata
+      - /home/r9888/Audiobooks:/audiobooks
+      - /home/r9888/Podcasts:/podcasts
