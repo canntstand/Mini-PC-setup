@@ -13,6 +13,7 @@
 3. В сгенерированном файле `matrix/data/homeserver.yaml` задать параметры:
     - enable_registration: true
     - enable_registration_captcha: true
+    - recaptcha_siteverify_api: "https://www.google.com/recaptcha/api/siteverify"
     - recaptcha_public_key: <вставить_публичный_ключ>
     - recaptcha_private_key: <вставить_приватный_ключ>
 4. В файле `docker-compose.yaml` в сервисе `tuna_ssh` заменить `frolov-ssh` на свое название, предварительно зарезервированное на сайте Tuna в разделе Ports. Также необходимо верифицировать домен в панели управления Tuna.
@@ -39,3 +40,6 @@
 2. Любым безопасным способом переслать строку из файла `.pub` нового устройства на ваш основной ПК или сервер.
 3. На сервере: `nano ~/.ssh/authorized_keys`
 4. Перейти в самый конец файла, создать новую строку, вставить туда публичный ключ нового устройства и сохранить файл.
+
+# Audiobookshelf и Navidrome
+После запуска нужно просто зайти в браузере по frolovserver.ru/music и frolovserver.ru/audiobookshelf и создать пользователя, после скачать понравившийся клиент на пк/телефон, войти в аккаунт и пользоваться (и конечно нужно перенести на сервер в нужные папки все книги, музыку и тд)

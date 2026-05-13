@@ -60,13 +60,12 @@ services:
 
   audiobookshelf:
     container_name: audiobookshelf
-    image: advrh/audiobookshelf:latest
+    image: advplyr/audiobookshelf:latest
     restart: always
     expose:
       - 80
     environment:
       - AUDIOBOOKSHELF_PORT=80
-      - TONE_PATH=/books
     volumes:
       - ./audiobookshelf/config:/config
       - ./audiobookshelf/metadata:/metadata
