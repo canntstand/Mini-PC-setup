@@ -1,28 +1,33 @@
 server {
     listen 80;
     server_name ${SYNAPSE_SERVER_NAME};
+    client_max_body_size 50M;
+
+    # 1. Ссылки из вашего примера (Client Discovery)
+    location /.well-known/matrix/client {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *; 
+        return 200 '{"m.homeserver": {"base_url": "https://${SYNAPSE_SERVER_NAME}"}}';
+    }
 
     location /.well-known/matrix/server {
         default_type application/json;
-        return 200 '{"m.server": "matrix.${SYNAPSE_SERVER_NAME}:443"}';
-    }
-
-    location /.well-known/matrix/client {
-        default_type application/json;
         add_header Access-Control-Allow-Origin *;
-        return 200 '{"m.homeserver": {"base_url": "https://matrix.${SYNAPSE_SERVER_NAME}"}}';
+        return 200 '{"m.server": "${SYNAPSE_SERVER_NAME}:443"}';
     }
-}
 
-server {
-    listen 80;
-    server_name matrix.${SYNAPSE_SERVER_NAME};
-    client_max_body_size 50M;
-
-    location / {
+    location ~ ^(/_matrix|/_synapse/client) {
         proxy_pass http://synapse:8008;
+        
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $remote_addr;
-        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_set_header X-Forwarded-Proto https;
+        
+        proxy_http_version 1.1;
+    }
+
+    location / {
+        default_type text/html;
+        return 200 '<h1>Homeserver ${SYNAPSE_SERVER_NAME} is running</h1><p>Services are active.</p>';
     }
 }

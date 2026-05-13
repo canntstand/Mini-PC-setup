@@ -15,6 +15,7 @@
     - enable_registration_captcha: true
     - recaptcha_public_key: <публичный_ключ>
     - recaptcha_private_key: <приватный_ключ>
+4. В docker-compose.yaml в tuna-ssh заменить frolov-ssh на свое название зарезервированное на сайте tuna в ports + нужно верифицировать домен там же
 4. docker compose up -d
 5. chmod +x scripts/create_admin.sh && ./scripts/create_admin.sh
 

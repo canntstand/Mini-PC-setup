@@ -21,15 +21,23 @@ services:
     depends_on:
       - synapse
 
-  tuna:
-    container_name: tuna_tunnel
+  tuna_matrix:
+    container_name: tuna_matrix
     image: yuccastream/tuna:latest
     restart: always
     network_mode: "host"
     environment:
       - TUNA_TOKEN=${TUNA_TOKEN}
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
-    command: >
-      sh -c "tuna http 8080 --domain=$${SYNAPSE_SERVER_NAME} --subdomains --https-redirect & 
-      tuna tcp 22 --port=frolov-ssh & 
-      wait"
+    command: http 8080 --domain=${SYNAPSE_SERVER_NAME} --https-redirect
+    depends_on:
+      - nginx
+
+  tuna_ssh:
+    container_name: tuna_ssh
+    image: yuccastream/tuna:latest
+    restart: always
+    network_mode: "host"
+    environment:
+      - TUNA_TOKEN=${TUNA_TOKEN}
+    command: tcp 22 --port=frolov-ssh
