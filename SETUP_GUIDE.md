@@ -3,6 +3,7 @@
 # Подготовка
    1. sudo systemctl enable --now docker
    2. sudo systemctl enable --now containerd
+   3. git clone https://github.com/canntstand/Mini-PC-setup.git
 
 # Synapse (Matrix)
    1. Настроить все переменные в .env (указать имя сервера, совпадающее с купленным доменным именем).
