@@ -2,9 +2,12 @@ server {
     listen 80;
     server_name ${SYNAPSE_SERVER_NAME};
     client_max_body_size 2G;
-
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
+    
     location /.well-known/carddav { return 301 https://$host/nextcloud/remote.php/dav; }
     location /.well-known/caldav  { return 301 https://$host/nextcloud/remote.php/dav; }
+    location /.well-known/webfinger { return 301 https://$host/nextcloud/index.php/.well-known/webfinger; }
+    location /.well-known/nodeinfo   { return 301 https://$host/nextcloud/index.php/.well-known/nodeinfo; }
 
     location /.well-known/matrix/client {
         default_type application/json;
@@ -53,19 +56,25 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
-    location /nextcloud {
-        proxy_pass http://nextcloud:80;
-
+    location /nextcloud/ {
+        proxy_pass http://nextcloud:80/;
+        
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
 
         proxy_buffering off;
         proxy_request_buffering off;
         keepalive_timeout 3600;
         proxy_read_timeout 3600;
     }
+
+    location = /nextcloud {
+        return 301 https://$host/nextcloud/;
+    }
+
 
     location / {
         default_type text/html;
