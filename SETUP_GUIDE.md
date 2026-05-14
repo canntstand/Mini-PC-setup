@@ -44,3 +44,12 @@
 
 # Audiobookshelf и Navidrome
 После запуска нужно просто зайти в браузере по frolovserver.ru/music и frolovserver.ru/audiobookshelf и создать пользователя, после скачать понравившийся клиент на пк/телефон, войти в аккаунт и пользоваться (и конечно нужно перенести на сервер в нужные папки все книги, музыку и тд)
+
+# Nextcloud
+В файле ./nextcloud/html/config/config.php в блок trusted_domains добавить: 
+
+'trusted_domains' => 
+array (
+  0 => 'localhost',
+  1 => 'ВАШ_ДОМЕН_ИЗ_ПЕРЕМЕННОЙ_SYNAPSE_SERVER_NAME',
+)

@@ -22,6 +22,7 @@ services:
       - synapse
       - navidrome
       - audiobookshelf
+      - nextcloud
 
   tuna_matrix:
     container_name: tuna_matrix
@@ -71,3 +72,36 @@ services:
       - ./audiobookshelf/metadata:/metadata
       - /home/r9888/Audiobooks:/audiobooks
       - /home/r9888/Podcasts:/podcasts
+      - /home/r9888/Books:/books 
+  
+  nextcloud_db:
+    image: postgres:15-alpine
+    container_name: nextcloud_db
+    restart: always
+    volumes:
+      - ./nextcloud/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - 5432
+
+  nextcloud:
+    image: nextcloud:stable
+    container_name: nextcloud
+    restart: always
+    expose:
+      - 80
+    depends_on:
+      - nextcloud_db
+    environment:
+      - POSTGRES_HOST=nextcloud_db
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - OVERWRITEWEBROOT=/nextcloud
+      - OVERWRITEPROTOCOL=https
+    volumes:
+      - ./nextcloud/html:/var/www/html
+      - /home/r9888/NextcloudData:/var/www/html/data

@@ -3,7 +3,9 @@ server {
     server_name ${SYNAPSE_SERVER_NAME};
     client_max_body_size 2G;
 
-    # 1. Ссылки из вашего примера (Client Discovery)
+    location /.well-known/carddav { return 301 https://$host/nextcloud/remote.php/dav; }
+    location /.well-known/caldav  { return 301 https://$host/nextcloud/remote.php/dav; }
+
     location /.well-known/matrix/client {
         default_type application/json;
         add_header Access-Control-Allow-Origin *; 
@@ -49,6 +51,20 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+    }
+
+    location /nextcloud {
+        proxy_pass http://nextcloud:80;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_buffering off;
+        proxy_request_buffering off;
+        keepalive_timeout 3600;
+        proxy_read_timeout 3600;
     }
 
     location / {
