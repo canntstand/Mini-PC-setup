@@ -17,6 +17,9 @@ if [ -f "$CONFIG_PATH" ]; then
     DB_NAME=${POSTGRES_DB_SYNAPSE:-synapse}
     DB_HOST=${POSTGRES_HOST:-synapse_db}
 
+    sudo sed -i '/port: 8008/,/type: http/ { /type: http/ a\    x_forwarded: true
+    }' "$CONFIG_PATH"
+
     sudo sed -i '/listeners:/,$d' "$CONFIG_PATH"
 
     sudo tee -a "$CONFIG_PATH" > /dev/null <<EOF
@@ -49,17 +52,9 @@ recaptcha_private_key: "${RECAPTCHA_PRIVATE_KEY}"
 EOF
     echo "Файл homeserver.yaml успешно обновлен."
 else
-    echo "Ошибка: Базовый конфигурационный файл не найден."
+    echo "Ошибка: Базовый конфигурационный ... файл не найден."
     exit 1
 fi
-
-echo "Перезапуск всех Docker-контейнеров стека..."
-docker compose down -v
-
-sudo rm -rf matrix/postgres_data/ nextcloud/db/
-
-sudo mkdir -p matrix/postgres_data nextcloud/db
-sudo chmod -R 777 matrix/postgres_data nextcloud/db
 
 OS_TYPE="$(uname -s)"
 if [[ "$OS_TYPE" != *"MINGW"* && "$OS_TYPE" != *"MSYS"* ]]; then
@@ -69,16 +64,16 @@ fi
 sudo mkdir -p /home/r9888/NextcloudData
 sudo chown -R 33:33 /home/r9888/NextcloudData
 
+echo "Запуск Docker-контейнеров стека..."
 docker compose up -d
 
-echo "Ожидание запуска всех сервисов (60 секунд)..."
+echo "Ожидание инициализации всех сервисов (60 секунд)..."
 sleep 60
 
 chmod +x scripts/create_admin.sh
 ./scripts/create_admin.sh
 
 echo "Запуск автоматической установки ядра Nextcloud..."
-
 docker compose exec -u www-data nextcloud php occ maintenance:install \
   --database="pgsql" \
   --database-name="${POSTGRES_DB_NEXTCLOUD}" \
