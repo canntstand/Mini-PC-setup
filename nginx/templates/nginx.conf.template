@@ -1,3 +1,8 @@
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 server {
     listen 80;
     server_name ${SYNAPSE_SERVER_NAME};
@@ -23,48 +28,40 @@ server {
 
     location ~ ^(/_matrix|/_synapse/client) {
         proxy_pass http://synapse:8008;
-        
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto https;
-        
         proxy_http_version 1.1;
     }
     
     location /music {
         proxy_pass http://navidrome:4533;
-        
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto https;
-        
         proxy_buffering off;
         proxy_http_version 1.1;
     }
 
     location /audiobookshelf {
         proxy_pass http://audiobookshelf:80; 
-        
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
-
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection $connection_upgrade;
     }
 
     location /nextcloud/ {
-        proxy_pass http://nextcloud:80/;
-        
+        proxy_pass http://nextcloud:80;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-Host $host;
-
         proxy_buffering off;
         proxy_request_buffering off;
         keepalive_timeout 3600;
@@ -74,7 +71,6 @@ server {
     location = /nextcloud {
         return 301 https://$host/nextcloud/;
     }
-
 
     location / {
         default_type text/html;

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-export $(grep -v '^#' .env | xargs)
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
 
 echo "Регистрируем администратора ${ADMIN_USER}..."
 

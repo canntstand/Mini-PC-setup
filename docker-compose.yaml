@@ -7,6 +7,31 @@ services:
       - 8008
     volumes:
       - ./matrix/data:/data
+    depends_on:
+      synapse_db:
+        condition: service_healthy
+    environment:
+      - SYNAPSE_REPORT_STATS=no
+
+  synapse_db:
+    container_name: synapse_db
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_SYNAPSE}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./matrix/postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_SYNAPSE}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   nginx:
     image: nginx:stable
@@ -43,7 +68,7 @@ services:
     network_mode: "host"
     environment:
       - TUNA_TOKEN=${TUNA_TOKEN}
-    command: tcp 22 --port=frolov-ssh
+    command: tcp 22 --port=${TUNA_SSH_PORT}
 
   navidrome:
     container_name: navidrome
@@ -72,8 +97,8 @@ services:
       - ./audiobookshelf/metadata:/metadata
       - /home/r9888/Audiobooks:/audiobooks
       - /home/r9888/Podcasts:/podcasts
-      - /home/r9888/Books:/books 
-  
+      - /home/r9888/Books:/books
+
   nextcloud_db:
     image: postgres:15-alpine
     container_name: nextcloud_db
@@ -81,11 +106,20 @@ services:
     volumes:
       - ./nextcloud/db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_DB=${POSTGRES_DB_NEXTCLOUD}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     expose:
       - 5432
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NEXTCLOUD}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   nextcloud:
     image: nextcloud:stable
@@ -94,10 +128,11 @@ services:
     expose:
       - 80
     depends_on:
-      - nextcloud_db
+      nextcloud_db:
+        condition: service_healthy
     environment:
       - POSTGRES_HOST=nextcloud_db
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_DB=${POSTGRES_DB_NEXTCLOUD}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - OVERWRITEWEBROOT=/nextcloud
@@ -106,36 +141,3 @@ services:
     volumes:
       - ./nextcloud/html:/var/www/html
       - /home/r9888/NextcloudData:/var/www/html/data
-  
-  nextcloud_configure:
-    image: nextcloud:stable
-    container_name: nextcloud_configure
-    depends_on:
-      - nextcloud
-    volumes:
-      - ./nextcloud/html:/var/www/html
-      - /home/r9888/NextcloudData:/var/www/html/data
-    entrypoint: /bin/sh
-    command: >
-      -c "
-      echo 'Waiting for Nextcloud to be installed...';
-      until [ -f /var/www/html/config/config.php ]; do sleep 2; done;
-        
-      echo 'Applying system fixes...';
-      php occ config:system:set trusted_domains 2 --value='frolovserver.ru';
-      php occ config:system:set trusted_proxies 0 --value='172.16.0.0/12';
-      php occ config:system:set maintenance_window_start --value=2 --type=int;
-      php occ background:job:set cron;
-      
-      # Новые исправления:
-      php occ config:system:set default_phone_region --value='RU';
-      php occ config:system:set filelocking.enabled --value=true --type=boolean;
-      php occ config:system:set memcache.local --value='\\OC\\Memcache\\APCu';
-      php occ config:system:set server_id --value='$(cat /proc/sys/kernel/random/uuid)';
-        
-      echo 'Applying migrations and htaccess...';
-      php occ maintenance:repair --include-expensive --no-interaction;
-      php occ maintenance:update:htaccess;
-        
-      echo 'Configuration applied successfully!';
-      "
