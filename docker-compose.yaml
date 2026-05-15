@@ -141,34 +141,43 @@ services:
       - OVERWRITEWEBROOT=/nextcloud
       - OVERWRITEPROTOCOL=https
       - HTACCESS_OVERRIDE_CURRENT=1
-      - TRUSTED_PROXIES=nginx_proxy
     volumes:
       - ./nextcloud/html:/var/www/html
       - /home/r9888/NextcloudData:/var/www/html/data
 
-  nextcloud_init:
+  nextcloud_configure:
     image: nextcloud:stable
-    container_name: nextcloud_init
+    container_name: nextcloud_configure
     restart: "no"
+    depends_on:
+      - nextcloud
     volumes:
       - ./nextcloud/html:/var/www/html
       - /home/r9888/NextcloudData:/var/www/html/data
-    depends_on:
-      nextcloud:
-        condition: service_started
-    user: www-data
+    entrypoint: /bin/sh
     command: >
-      sh -c "
-      echo 'Ожидание готовности конфигурационного файла...' &&
-      until [ -f /var/www/html/config/config.php ]; do sleep 2; done &&
-      echo 'Применение параметров домена и прокси...' &&
-      php occ config:system:set trusted_domains 1 --value='${SYNAPSE_SERVER_NAME}' &&
-      php occ config:system:set trusted_proxies 0 --value='172.16.0.0/12' &&
-      php occ config:system:set maintenance_window_start --value=2 --type=int &&
-      php occ background-job:set cron &&
-      php occ config:system:set default_phone_region --value='RU' &&
-      php occ config:system:set filelocking.enabled --value=true --type=boolean &&
-      php occ config:system:set memcache.local --value='\OC\Memcache\APCu' &&
-      php occ maintenance:repair --include-expensive --no-interaction &&
-      php occ maintenance:update:htaccess &&
-      echo 'Конфигурация Nextcloud успешно завершена!'"
+      -c "
+      echo 'Waiting for Nextcloud to be installed...';
+      until [ -f /var/www/html/config/config.php ]; do sleep 2; done;
+      sleep 10;
+        
+      echo 'Applying system fixes...';
+
+      php occ config:system:set trusted_domains 1 --value='${SYNAPSE_SERVER_NAME}';
+
+      php occ config:system:set trusted_proxies 0 --value='172.16.0.0/12';
+
+      php occ config:system:set maintenance_window_start --value=2 --type=int;
+      php occ background-job:set cron;
+
+      php occ config:system:set default_phone_region --value='RU';
+      php occ config:system:set filelocking.enabled --value=true --type=boolean;
+      php occ config:system:set memcache.local --value='\\\\OC\\\\Memcache\\\\APCu';
+      php occ config:system:set server_id --value='\$(cat /proc/sys/kernel/random/uuid)';
+        
+      echo 'Applying migrations and htaccess...';
+      php occ maintenance:repair --include-expensive --no-interaction;
+      php occ maintenance:update:htaccess;
+        
+      echo 'Configuration applied successfully!';
+      "
