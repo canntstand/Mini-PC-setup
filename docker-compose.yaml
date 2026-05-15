@@ -28,7 +28,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB_SYNAPSE}",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_SYNAPSE}",
         ]
       interval: 5s
       timeout: 5s
@@ -116,7 +116,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB_NEXTCLOUD}",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NEXTCLOUD}",
         ]
       interval: 5s
       timeout: 5s
