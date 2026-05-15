@@ -13,14 +13,14 @@ OS_TYPE="$(uname -s)"
 
 if [[ "$OS_TYPE" == *"MINGW"* || "$OS_TYPE" == *"MSYS"* ]]; then
     echo "Определена ОС: Windows (Git Bash)"
-    MSYS_NO_PATHCONV=1 docker run -i --rm \
+    MSYS_NO_PATHCONV=1 docker run -it --rm \
         -v "//$(pwd)/matrix/data:/data" \
         -e SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME} \
         -e SYNAPSE_REPORT_STATS=no \
         matrixdotorg/synapse:v1.152.1 generate
 else
     echo "Определена ОС: Linux"
-    docker run -i --rm \
+    docker run -it --rm \
         -v "$(pwd)/matrix/data:/data" \
         -e SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME} \
         -e SYNAPSE_REPORT_STATS=no \
