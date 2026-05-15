@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Домашний Сервер</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #121214;
+            color: #e1e1e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 { color: #ffffff; margin-bottom: 5px; font-size: 2.5rem; }
+        .subtitle { color: #8f9bb3; margin-bottom: 40px; font-size: 1.1rem; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: #1d1d22;
+            border: 1px solid #29292e;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            text-decoration: none;
+            color: #e1e1e6;
+            transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: #00bcd4;
+            background-color: #24242b;
+        }
+        .card h3 { margin: 0 0 10px 0; font-size: 1.4rem; color: #00bcd4; }
+        .card p { margin: 0; color: #a6a6b2; font-size: 0.95rem; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <h1>frolovserver.ru</h1>
+    <div class="subtitle">Панель управления домашними сервисами</div>
+    
+    <div class="grid">
+        <a href="/nextcloud" class="card">
+            <h3>☁ Nextcloud</h3>
+            <p>Личное облачное хранилище, файлы, календари и контакты.</p>
+        </a>
+        
+        <a href="/navidrome" class="card">
+            <h3>🎵 Navidrome</h3>
+            <p>Музыкальный стриминговый сервер для вашей аудиотеки.</p>
+        </a>
+        
+        <a href="/audiobookshelf" class="card">
+            <h3>📚 Audiobookshelf</h3>
+            <p>Сервер для аудиокниг, подкастов и электронных книг.</p>
+        </a>
+        
+        <a href="https://element.io" target="_blank" class="card">
+            <h3>💬 Matrix (Synapse)</h3>
+            <p>Сервер защищенного мессенджера. Подключитесь через клиент Element.</p>
+        </a>
+    </div>
+</body>
+</html>

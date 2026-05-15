@@ -34,7 +34,7 @@ server {
         proxy_http_version 1.1;
     }
     
-    location /music {
+    location /navidrome {
         proxy_pass http://navidrome:4533;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -73,7 +73,8 @@ server {
     }
 
     location / {
-        default_type text/html;
-        return 200 '<h1>Homeserver ${SYNAPSE_SERVER_NAME} is running</h1><p>Services are active.</p>';
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ =404;
     }
 }

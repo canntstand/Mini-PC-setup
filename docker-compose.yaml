@@ -44,6 +44,7 @@ services:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     volumes:
       - ./nginx/templates/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/www:/usr/share/nginx/html:ro
     depends_on:
       - synapse
       - navidrome
@@ -79,7 +80,7 @@ services:
     environment:
       ND_SCANINTERVAL: "1m"
       ND_LOGLEVEL: "info"
-      ND_BASEURL: "/music"
+      ND_BASEURL: "/navidrome"
     volumes:
       - ./navidrome/data:/data
       - /home/r9888/Music:/music:ro
