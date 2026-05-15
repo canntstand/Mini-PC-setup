@@ -44,6 +44,7 @@ database:
     cp_min: 5
     cp_max: 10
 
+report_stats: false
 enable_registration: true
 enable_registration_captcha: true
 recaptcha_siteverify_api: "https://google.com"
