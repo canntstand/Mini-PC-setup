@@ -1,4 +1,5 @@
 #!/bin/bash
+
 chmod +x scripts/synapse_init.sh
 ./scripts/synapse_init.sh
 
@@ -32,7 +33,7 @@ database:
 
 enable_registration: true
 enable_registration_captcha: true
-recaptcha_siteverify_api: "https://google.com"
+recaptcha_siteverify_api: "https://www.google.com/recaptcha/api/siteverify"
 recaptcha_public_key: "${RECAPTCHA_PUBLIC_KEY}"
 recaptcha_private_key: "${RECAPTCHA_PRIVATE_KEY}"
 EOF
@@ -52,6 +53,9 @@ if [[ "$OS_TYPE" != *"MINGW"* && "$OS_TYPE" != *"MSYS"* ]]; then
     sudo chown -R 991:991 matrix/data/
 fi
 
+sudo mkdir -p /home/r9888/NextcloudData
+sudo chown -R 33:33 /home/r9888/NextcloudData
+
 echo "Перезапуск всех Docker-контейнеров стека..."
 docker compose up -d
 
@@ -60,29 +64,35 @@ until [ "$(docker inspect -f '{{.State.Health.Status}}' synapse_db)" == "healthy
     sleep 2
 done
 
-echo "Ожидание запуска веб-интерфейса Synapse на порту 8008..."
-until docker compose exec synapse wget -qO- http://localhost:8008/_matrix/client/versions > /dev/null 2>&1; do
-    echo "Synapse стартует (применение миграций БД), ждем 3 секунды..."
-    sleep 3
-done
+echo "Ожидание запуска веб-интерфейса Synapse..."
+sleep 15
 
 chmod +x scripts/create_admin.sh
 ./scripts/create_admin.sh
 
 echo "Ожидание завершения первичной установки Nextcloud..."
-until docker compose exec -u www-data nextcloud php occ status > /dev/null 2>&1; do
-    sleep 3
+until [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/nextcloud/status.php)" = "200" ]; do
+    sleep 2
 done
 
 echo "Применение настроек Nextcloud..."
 docker compose exec -u www-data nextcloud php occ config:system:set trusted_domains 2 --value="${SYNAPSE_SERVER_NAME}"
 docker compose exec -u www-data nextcloud php occ config:system:set trusted_proxies 0 --value='172.16.0.0/12'
-docker compose exec -u www-data nextcloud php occ maintenance:window_start --value=2 --type=int
+docker compose exec -u www-data nextcloud php occ config:system:set maintenance_window_start --value=2 --type=int
 docker compose exec -u www-data nextcloud php occ background:job:set cron
 docker compose exec -u www-data nextcloud php occ config:system:set default_phone_region --value='RU'
 docker compose exec -u www-data nextcloud php occ config:system:set filelocking.enabled --value=true --type=boolean
 docker compose exec -u www-data nextcloud php occ config:system:set memcache.local --value='\OC\Memcache\APCu'
 docker compose exec -u www-data nextcloud php occ maintenance:repair --include-expensive --no-interaction
 docker compose exec -u www-data nextcloud php occ maintenance:update:htaccess
+
+echo "Настройка cron для Nextcloud..."
+CRON_JOB="*/5 * * * * docker compose exec -u www-data nextcloud php -f /var/www/html/cron.php"
+if ! sudo crontab -l 2>/dev/null | grep -qF "$CRON_JOB"; then
+    (sudo crontab -l 2>/dev/null; echo "$CRON_JOB") | sudo crontab -
+    echo "Cron-задание добавлено."
+else
+    echo "Cron-задание уже существует."
+fi
 
 echo "Все службы успешно запущены и настроены!"
