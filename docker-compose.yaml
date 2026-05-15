@@ -162,7 +162,7 @@ services:
       echo 'Ожидание готовности конфигурационного файла...' &&
       until [ -f /var/www/html/config/config.php ]; do sleep 2; done &&
       echo 'Применение параметров домена и прокси...' &&
-      php occ config:system:set trusted_domains 2 --value='${SYNAPSE_SERVER_NAME}' &&
+      php occ config:system:set trusted_domains 1 --value='${SYNAPSE_SERVER_NAME}' &&
       php occ config:system:set trusted_proxies 0 --value='172.16.0.0/12' &&
       php occ config:system:set maintenance_window_start --value=2 --type=int &&
       php occ background-job:set cron &&
