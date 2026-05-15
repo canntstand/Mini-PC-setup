@@ -1,75 +1,369 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Домашний Сервер</title>
+    <title>Панель Сервера</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
+        @import url('https://googleapis.com');
+
+        :root {
+            --gradient-accent: linear-gradient(135deg, #e4569d 0%, #ff7e40 100%);
+            --pink-base: #e4569d;
+            --orange-base: #ff7e40;
+            --gradient-glow: rgba(228, 86, 157, 0.2);
+            --glass-light: rgba(255, 255, 255, 0.12);
+            --tile-bg: rgba(35, 35, 45, 0.48);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background-color: #121214;
-            color: #e1e1e6;
+            background: #121214 url("background.jpg") center/cover no-repeat fixed;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 20px;
+        }
+
+        .wrapper {
+            background: var(--glass-light);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 40px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 1050px;
+            text-align: center;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            margin: auto 0;
+        }
+
+        .header-area {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
+            margin-bottom: 45px;
         }
-        h1 { color: #ffffff; margin-bottom: 5px; font-size: 2.5rem; }
-        .subtitle { color: #8f9bb3; margin-bottom: 40px; font-size: 1.1rem; }
-        .grid {
+
+        h1 {
+            color: #ffffff;
+            font-size: 38px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            letter-spacing: -1.5px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .tile-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 800px;
-            padding: 20px;
-            box-sizing: border-box;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
         }
-        .card {
-            background: #1d1d22;
-            border: 1px solid #29292e;
-            border-radius: 12px;
-            padding: 25px;
-            text-align: center;
+
+        .tile {
+            position: relative;
+            background: var(--tile-bg);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 35px 28px;
             text-decoration: none;
-            color: #e1e1e6;
-            transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+            color: #ffffff;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 250px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
         }
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: #00bcd4;
-            background-color: #24242b;
+
+        .tile-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
-        .card h3 { margin: 0 0 10px 0; font-size: 1.4rem; color: #00bcd4; }
-        .card p { margin: 0; color: #a6a6b2; font-size: 0.95rem; line-height: 1.4; }
+
+        .icon-box {
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-box svg {
+            width: 40px;
+            height: 40px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.75;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .tile h3 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            transition: all 0.4s ease;
+        }
+
+        .tile p {
+            margin: 0;
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        .tile-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .tile:hover {
+            background: rgba(30, 30, 40, 0.65);
+            /* Сбалансированный тон наведения */
+            border-color: transparent;
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 20px 40px var(--gradient-glow), 0 0 0 2px var(--orange-base);
+        }
+
+        .tile:hover h3 {
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 126, 64, 0.2);
+        }
+
+        .tile:hover .icon-box {
+            color: var(--orange-base);
+            transform: rotate(5deg) scale(1.1);
+            filter: drop-shadow(0 0 8px var(--gradient-glow));
+        }
+
+        .tile:hover .tile-btn {
+            background: var(--gradient-accent);
+            border-color: transparent;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(228, 86, 157, 0.3);
+        }
+
+        .github-footer {
+            margin-top: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 12px;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 12px 28px;
+            border-radius: 30px;
+            background: rgba(35, 35, 45, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .github-footer svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            transition: transform 0.4s ease;
+        }
+
+        .github-footer:hover {
+            color: #ffffff;
+            background: var(--gradient-accent);
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(228, 86, 157, 0.3);
+        }
+
+        .github-footer:hover svg {
+            transform: rotate(360deg);
+        }
     </style>
 </head>
+
 <body>
-    <h1>frolovserver.ru</h1>
-    <div class="subtitle">Панель управления домашними сервисами</div>
-    
-    <div class="grid">
-        <a href="/nextcloud" class="card">
-            <h3>☁ Nextcloud</h3>
-            <p>Личное облачное хранилище, файлы, календари и контакты.</p>
-        </a>
-        
-        <a href="/navidrome" class="card">
-            <h3>🎵 Navidrome</h3>
-            <p>Музыкальный стриминговый сервер для вашей аудиотеки.</p>
-        </a>
-        
-        <a href="/audiobookshelf" class="card">
-            <h3>📚 Audiobookshelf</h3>
-            <p>Сервер для аудиокниг, подкастов и электронных книг.</p>
-        </a>
-        
-        <a href="https://element.io" target="_blank" class="card">
-            <h3>💬 Matrix (Synapse)</h3>
-            <p>Сервер защищенного мессенджера. Подключитесь через клиент Element.</p>
-        </a>
+
+    <div class="wrapper">
+        <div class="header-area">
+            <h1>Домашний сервер</h1>
+            <div class="status-badge">
+                <div class="pulse-dot"></div>
+                <span>Сервер Онлайн</span>
+            </div>
+        </div>
+
+        <div class="tile-grid">
+            <a href="/nextcloud" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </div>
+                    <h3>Nextcloud</h3>
+                    <p>Личное облачное хранилище, совместная работа, календари и контакты.</p>
+                </div>
+                <div class="tile-btn">Открыть</div>
+            </a>
+
+            <a href="/navidrome" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 2v4m0 12v4M2 12h4m12 0h4" />
+                        </svg>
+                    </div>
+                    <h3>Navidrome</h3>
+                    <p>Музыкальный сервер для трансляции вашей личной коллекции треков.</p>
+                </div>
+                <div class="tile-btn">Открыть</div>
+            </a>
+
+            <a href="/audiobookshelf" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5v-15z" />
+                        </svg>
+                    </div>
+                    <h3>Audiobooks</h3>
+                    <p>Сервер для аудиокниг, подкастов и цифровых изданий.</p>
+                </div>
+                <div class="tile-btn">Открыть</div>
+            </a>
+
+            <a href="https://element.io" target="_blank" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </div>
+                    <h3>Matrix</h3>
+                    <p>Защищенный мессенджер на базе распределенного движка Synapse.</p>
+                </div>
+                <div class="tile-btn">Чат</div>
+            </a>
+
+            <a href="https://tuna.am" target="_blank" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <h3>Tuna Net</h3>
+                    <p>Управление конфигурацией и безопасностью сетевых туннелей.</p>
+                </div>
+                <div class="tile-btn">Настроить</div>
+            </a>
+
+            <a href="/grafana" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+                        </svg>
+                    </div>
+                    <h3>Grafana</h3>
+                    <p>Мониторинг ресурсов, нагрузки и системных метрик железа.</p>
+                </div>
+                <div class="tile-btn">Смотреть</div>
+            </a>
+        </div>
     </div>
+
+    <a href="https://github.com/canntstand/Mini-PC-setup" target="_blank" class="github-footer">
+        <svg viewBox="0 0 16 16">
+            <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+        <span>GitHub Проекта</span>
+    </a>
+
 </body>
+
 </html>
