@@ -28,7 +28,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_SYNAPSE}",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB_SYNAPSE}",
         ]
       interval: 5s
       timeout: 5s
@@ -37,8 +37,8 @@ services:
   nginx:
     image: nginx:stable
     container_name: nginx_proxy
-    ports:
-      - "8080:80"
+    expose:
+      - 80
     restart: always
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
@@ -54,11 +54,10 @@ services:
     container_name: tuna_matrix
     image: yuccastream/tuna:latest
     restart: always
-    network_mode: "host"
     environment:
       - TUNA_TOKEN=${TUNA_TOKEN}
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
-    command: http 8080 --domain=${SYNAPSE_SERVER_NAME} --https-redirect
+    command: http nginx:80 --domain=${SYNAPSE_SERVER_NAME} --https-redirect
     depends_on:
       - nginx
 
@@ -117,7 +116,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NEXTCLOUD}",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB_NEXTCLOUD}",
         ]
       interval: 5s
       timeout: 5s
@@ -142,6 +141,7 @@ services:
       - OVERWRITEWEBROOT=/nextcloud
       - OVERWRITEPROTOCOL=https
       - HTACCESS_OVERRIDE_CURRENT=1
+      - TRUSTED_PROXIES=nginx_proxy
     volumes:
       - ./nextcloud/html:/var/www/html
       - /home/r9888/NextcloudData:/var/www/html/data

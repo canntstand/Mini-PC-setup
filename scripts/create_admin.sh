@@ -5,12 +5,7 @@ fi
 
 echo "Регистрация администратора Synapse из .env..."
 
-echo "Ожидание доступности Synapse API..."
-until curl -s -f -o /dev/null http://127.0.0.1:8008/_matrix/client/versions; do
-    sleep 2
-done
-
-docker compose exec -it synapse register_new_matrix_user \
+docker compose exec -i synapse register_new_matrix_user \
     -c /data/homeserver.yaml \
     -u "$ADMIN_USER" \
     -p "$ADMIN_PASSWORD" \
