@@ -50,6 +50,7 @@ services:
       - navidrome
       - audiobookshelf
       - nextcloud
+      - vaultwarden
 
   tuna_matrix:
     container_name: tuna_matrix
@@ -182,3 +183,40 @@ services:
         
       echo 'Configuration applied successfully!';
       "
+
+  vaultwarden_db:
+    image: postgres:15-alpine
+    container_name: vaultwarden_db
+    restart: always
+    volumes:
+      - ./vaultwarden/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_VAULTWARDEN}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_VAULTWARDEN}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: always
+    expose:
+      - 80
+      - 3012
+    depends_on:
+      vaultwarden_db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vaultwarden_db:5432/${POSTGRES_DB_VAULTWARDEN:-vaultwarden}
+      - DOMAIN=https://${SYNAPSE_SERVER_NAME}/vault
+      - SIGNUPS_ALLOWED=true
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - WEBSOCKET_ENABLED=true
+    volumes:
+      - ./vaultwarden/data:/data

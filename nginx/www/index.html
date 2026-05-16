@@ -7,7 +7,7 @@
     <title>Панель Сервера</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
-        @import url('https://googleapis.com');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap');
 
         :root {
             --gradient-accent: linear-gradient(135deg, #e4569d 0%, #ff7e40 100%);
@@ -42,7 +42,7 @@
             border-radius: 40px;
             padding: 50px 40px;
             width: 100%;
-            max-width: 1050px;
+            max-width: 1400px;
             text-align: center;
             box-shadow: 0 40px 80px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
             margin: auto 0;
@@ -109,7 +109,7 @@
 
         .tile-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 24px;
         }
 
@@ -192,7 +192,6 @@
 
         .tile:hover {
             background: rgba(30, 30, 40, 0.65);
-            /* Сбалансированный тон наведения */
             border-color: transparent;
             transform: translateY(-8px) scale(1.01);
             box-shadow: 0 20px 40px var(--gradient-glow), 0 0 0 2px var(--orange-base);
@@ -258,6 +257,33 @@
         .github-footer:hover svg {
             transform: rotate(360deg);
         }
+
+        @media (max-width: 1200px) {
+            .tile-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .tile-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .wrapper {
+                padding: 30px 20px;
+            }
+
+            .tile-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
     </style>
 </head>
 
@@ -313,6 +339,37 @@
                     <p>Сервер для аудиокниг, подкастов и цифровых изданий.</p>
                 </div>
                 <div class="tile-btn">Открыть</div>
+            </a>
+
+            <a href="/vault/" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="5" y="8" width="14" height="12" rx="2" ry="2" />
+                            <path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            <path d="M12 12v4" />
+                            <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+                        </svg>
+                    </div>
+                    <h3>Vaultwarden</h3>
+                    <p>Менеджер паролей с двухфакторной аутентификацией и шифрованием.</p>
+                </div>
+                <div class="tile-btn">Управлять</div>
+            </a>
+
+            <a href="/borg" class="tile">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 11H5M5 5h14v14H5z" />
+                            <path d="M12 16a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                            <path d="M8 8h.01M16 8h.01" />
+                        </svg>
+                    </div>
+                    <h3>Borg UI</h3>
+                    <p>Управление резервным копированием, дедупликация и восстановление данных.</p>
+                </div>
+                <div class="tile-btn">Бэкапы</div>
             </a>
 
             <a href="https://element.io" target="_blank" class="tile">
