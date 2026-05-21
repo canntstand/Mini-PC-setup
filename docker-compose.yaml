@@ -1,0 +1,323 @@
+services:
+  synapse:
+    container_name: synapse
+    image: matrixdotorg/synapse:latest
+    restart: always
+    expose:
+      - 8008
+    volumes:
+      - ./matrix/data:/data
+    depends_on:
+      synapse_db:
+        condition: service_healthy
+    environment:
+      - SYNAPSE_REPORT_STATS=no
+
+  synapse_db:
+    container_name: synapse_db
+    image: postgres:18
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_SYNAPSE}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - synapse_db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:stable
+    container_name: nginx_proxy
+    expose:
+      - 80
+    restart: always
+    environment:
+      - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
+    volumes:
+      - ./nginx/templates/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/www:/usr/share/nginx/html:ro
+    depends_on:
+      - synapse
+      - navidrome
+      - audiobookshelf
+      - nextcloud
+      - vaultwarden
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    restart: always
+    ports:
+      - "9113:9113"
+    command: --nginx.scrape-uri=http://nginx_proxy:80/stub_status
+    depends_on:
+      - nginx
+
+  tuna_matrix:
+    container_name: tuna_matrix
+    image: yuccastream/tuna:latest
+    restart: always
+    environment:
+      - TUNA_TOKEN=${TUNA_TOKEN}
+      - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
+    command: http nginx:80 --domain=${SYNAPSE_SERVER_NAME} --https-redirect
+    depends_on:
+      - nginx
+
+  tuna_ssh:
+    container_name: tuna_ssh
+    image: yuccastream/tuna:latest
+    restart: always
+    network_mode: "host"
+    environment:
+      - TUNA_TOKEN=${TUNA_TOKEN}
+    command: tcp 22 --port=${TUNA_SSH_PORT}
+
+  navidrome:
+    container_name: navidrome
+    image: deluan/navidrome:latest
+    restart: always
+    expose:
+      - 4533
+    environment:
+      ND_SCANINTERVAL: "1m"
+      ND_LOGLEVEL: "info"
+      ND_BASEURL: "/navidrome"
+    volumes:
+      - ./navidrome/data:/data
+      - /home/${HOME}/Music:/music:ro
+
+  audiobookshelf:
+    container_name: audiobookshelf
+    image: advplyr/audiobookshelf:latest
+    restart: always
+    expose:
+      - 80
+    environment:
+      - AUDIOBOOKSHELF_PORT=80
+      - AUDIOBOOKSHELF_BASE_PATH=/audiobookshelf
+    volumes:
+      - ./audiobookshelf/config:/config
+      - ./audiobookshelf/metadata:/metadata
+      - /home/${HOME}/Audiobooks:/audiobooks
+      - /home/${HOME}/Podcasts:/podcasts
+      - /home/${HOME}/Books:/books
+
+  nextcloud_db:
+    image: postgres:18
+    container_name: nextcloud_db
+    restart: always
+    volumes:
+      - nextcloud_db_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_NEXTCLOUD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nextcloud:
+    image: nextcloud:stable
+    container_name: nextcloud
+    restart: always
+    expose:
+      - 80
+    depends_on:
+      nextcloud_db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=nextcloud_db
+      - POSTGRES_DB=${POSTGRES_DB_NEXTCLOUD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - NEXTCLOUD_ADMIN_USER=${ADMIN_USER}
+      - NEXTCLOUD_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - OVERWRITEWEBROOT=/nextcloud
+      - OVERWRITEPROTOCOL=https
+      - HTACCESS_OVERRIDE_CURRENT=1
+    volumes:
+      - ./nextcloud/html:/var/www/html
+      - /home/${HOME}/NextcloudData:/var/www/html/data
+
+  nextcloud_configure:
+    image: nextcloud:stable
+    container_name: nextcloud_configure
+    restart: "no"
+    depends_on:
+      - nextcloud
+    volumes:
+      - ./nextcloud/html:/var/www/html
+      - /home/${HOME}/NextcloudData:/var/www/html/data
+    entrypoint: /bin/sh
+    command: >
+      -c "
+      echo 'Waiting for Nextcloud to be installed...';
+      until [ -f /var/www/html/config/config.php ]; do sleep 2; done;
+      sleep 10;
+        
+      echo 'Applying system fixes...';
+
+      php occ config:system:set trusted_domains 1 --value='${SYNAPSE_SERVER_NAME}';
+
+      php occ config:system:set trusted_proxies 0 --value='nginx';
+
+      php occ config:system:set maintenance_window_start --value=2 --type=int;
+      php occ background-job:set cron;
+
+      php occ config:system:set default_phone_region --value='RU';
+      php occ config:system:set filelocking.enabled --value=true --type=boolean;
+      php occ config:system:set memcache.local --value='\\OC\\Memcache\\APCu';
+        
+      echo 'Applying migrations and htaccess...';
+      php occ maintenance:repair --include-expensive --no-interaction;
+      php occ maintenance:update:htaccess;
+        
+      echo 'Configuration applied successfully!';
+      "
+
+  vaultwarden_db:
+    image: postgres:18
+    container_name: vaultwarden_db
+    restart: always
+    volumes:
+      - vaultwarden_db_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_VAULTWARDEN}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: always
+    expose:
+      - 80
+      - 3012
+    depends_on:
+      vaultwarden_db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vaultwarden_db:5432/${POSTGRES_DB_VAULTWARDEN}
+      - DOMAIN=https://${SYNAPSE_SERVER_NAME}/vault
+      - SIGNUPS_ALLOWED=true
+      - WEBSOCKET_ENABLED=true
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_HASH}
+    volumes:
+      - ./vaultwarden/data:/data
+
+  prometheus_init:
+    image: alpine:latest
+    container_name: prometheus_init
+    restart: "no"
+    user: "root"
+    volumes:
+      - ./prometheus:/mnt/prometheus
+      - ./grafana:/mnt/grafana
+    command: >
+      sh -c "
+      mkdir -p /mnt/prometheus/data && 
+      chown -R 65534:65534 /mnt/prometheus/data &&
+      mkdir -p /mnt/grafana/data &&
+      chown -R 472:472 /mnt/grafana/data
+      "
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    expose:
+      - 9090
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/data:/prometheus
+    depends_on:
+      prometheus_init:
+        condition: service_completed_successfully
+      node_exporter:
+        condition: service_started
+      cadvisor:
+        condition: service_started
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    expose:
+      - 3000
+    environment:
+      - GF_SERVER_ROOT_URL=https://${SYNAPSE_SERVER_NAME}/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus_init:
+        condition: service_completed_successfully
+      prometheus:
+        condition: service_started
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    restart: always
+    network_mode: "host"
+    pid: "host"
+    privileged: true
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /run/udev:/run/udev:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/rootfs/(sys|proc|dev|host|etc|var/lib/docker)($$|/)"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.54.1
+    container_name: cadvisor
+    restart: always
+    privileged: true
+    ports:
+      - "8080:8080"
+    command:
+      - "--allow_dynamic_housekeeping=true"
+      - "--housekeeping_interval=10s"
+      - "--disable_metrics=disk,referenced_memory"
+      - "--raw_cgroup_prefix_whitelist=/system.slice,/user.slice"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev:/dev:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/cgroup:ro
+
+volumes:
+  synapse_db_data:
+  nextcloud_db_data:
+  vaultwarden_db_data:

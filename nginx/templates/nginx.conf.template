@@ -1,0 +1,122 @@
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen 80;
+    server_name ${SYNAPSE_SERVER_NAME};
+    client_max_body_size 2G;
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains; preload" always;
+    set_real_ip_from 172.16.0.0/12;
+    set_real_ip_from 192.168.0.0/16;
+    set_real_ip_from 10.0.0.0/8;
+    set_real_ip_from 127.0.0.1;
+    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+    
+    location /.well-known/carddav { return 301 https://$host/nextcloud/remote.php/dav; }
+    location /.well-known/caldav  { return 301 https://$host/nextcloud/remote.php/dav; }
+    location /.well-known/webfinger { return 301 https://$host/nextcloud/index.php/.well-known/webfinger; }
+    location /.well-known/nodeinfo   { return 301 https://$host/nextcloud/index.php/.well-known/nodeinfo; }
+
+    location /.well-known/matrix/client {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *; 
+        return 200 '{"m.homeserver": {"base_url": "https://${SYNAPSE_SERVER_NAME}"}}';
+    }
+
+    location /.well-known/matrix/server {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *;
+        return 200 '{"m.server": "${SYNAPSE_SERVER_NAME}:443"}';
+    }
+
+    location ~ ^(/_matrix|/_synapse/client) {
+        proxy_pass http://synapse:8008;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_http_version 1.1;
+    }
+    
+    location /navidrome {
+        proxy_pass http://navidrome:4533;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_buffering off;
+        proxy_http_version 1.1;
+    }
+
+    location /audiobookshelf {
+        proxy_pass http://audiobookshelf:80; 
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /nextcloud/ {
+        proxy_pass http://nextcloud:80/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_buffering off;
+        proxy_request_buffering off;
+        keepalive_timeout 3600;
+        proxy_read_timeout 3600;
+    }
+
+    location = /nextcloud {
+        return 301 https://$host/nextcloud/;
+    }
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
+    location /vault/ {
+        proxy_pass http://vaultwarden:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    location /vault/notifications/hub {
+        proxy_pass http://vaultwarden:3012;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    location /grafana/ {
+        proxy_pass http://grafana:3000;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /stub_status {
+        stub_status;
+        allow 172.16.0.0/12;
+        deny all;
+    }
+}

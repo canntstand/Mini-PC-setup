@@ -1,0 +1,12 @@
+{
+    "yaml.schemas": {
+        "file:///c%3A/Users/Admin/.vscode/extensions/continue.continue-1.2.1-win32-x64/config-yaml-schema.json": [
+            ".continue/**/*.yaml"
+        ],
+        "file:///c%3A/Users/r9888/.vscode/extensions/continue.continue-1.2.22-win32-x64/config-yaml-schema.json": [
+            ".continue/**/*.yaml"
+        ],
+        "file:///c%3A/Users/r9888/.vscode/extensions/docsmsft.docs-yaml-1.0.6/dist/toc.schema.json": "/toc\\.yml/i",
+        "https://www.schemastore.org/yamlfmt.json": "file:///c%3A/Users/r9888/IT%20projects/Mini%20PC%20setup/grafana/provisioning/datasources/prometheus.yml"
+    }
+}
