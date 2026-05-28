@@ -1,4 +1,5 @@
-matrix/data/
-NextcloudData/
 certs/
 .git/
+certs-data/
+matrix/
+vaultwarden/
