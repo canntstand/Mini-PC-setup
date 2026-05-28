@@ -69,7 +69,6 @@ services:
       --manual-auth-hook /opt/certbot-dns-webnames/authenticator.sh
       --manual-cleanup-hook /opt/certbot-dns-webnames/cleanup.sh
       --preferred-challenges dns-01
-      --manual-public-ip-logging-ok
       --agree-tos
       --no-eff-email
       --non-interactive

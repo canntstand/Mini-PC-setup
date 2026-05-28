@@ -12,9 +12,9 @@
 1. На клиенте (ПК/смартфон): Убедиться, что Amnezia VPN успешно развернута (по шагам выше) и включена на устройствах, с которых нужен доступ.
 2. В DNS-панели вашего домена (на Webnames): Направить A-запись (и wildcard-запись `*`) на внутренний IP-адрес Amnezia VPN (`172.29.172.1`) для автоматического направления трафика в туннель.
 3. На локальном ПК: Установить argon2 (`sudo apt update && sudo apt install argon2 -y`) для генерации хеша пароля vaultwarden.
-4. На VPS: Выполнить `git clone [https://github.com/canntstand/Mini-PC-setup-FRP](https://github.com/canntstand/Mini-PC-setup-FRP) && cd Mini-PC-setup-FRP` и создать там минимальный файл `.env` с одной переменной `FRP_TOKEN`.
+4. На VPS: Выполнить `git clone https://github.com/canntstand/Mini-PC-setup-FRP && cd Mini-PC-setup-FRP` и создать там минимальный файл `.env` с одной переменной `FRP_TOKEN`.
 5. На VPS: Запустить автоматическую настройку сетевой части одной командой: `chmod +x scripts/setup_remote.sh && ./scripts/setup_remote.sh`.
-6. На локальном ПК (домашнем сервере): Выполнить `git clone [https://github.com/canntstand/Mini-PC-setup-FRP](https://github.com/canntstand/Mini-PC-setup-FRP) && cd Mini-PC-setup-FRP`.
+6. На локальном ПК (домашнем сервере): Выполнить `git clone https://github.com/canntstand/Mini-PC-setup-FRP && cd Mini-PC-setup-FRP`.
 7. На локальном ПК: Настроить все переменные в файле `.env` по примеру `.env.example`.
 8. На локальном ПК (убедившись, что Amnezia VPN включена): Запустить сборку основного проекта одной командой: `chmod +x scripts/setup_local.sh && ./scripts/setup_local.sh`.
 
