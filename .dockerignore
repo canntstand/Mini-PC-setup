@@ -1,8 +1,9 @@
-certs/
-.git/
-certs-data/
-matrix/
-vaultwarden/
 grafana/
-synapse/
+matrix/
 nextcloud/
+vaultwarden/
+synapse/
+navidrome/
+audiobookshelf/
+certs/
+certs-data/
