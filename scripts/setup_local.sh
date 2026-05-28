@@ -76,6 +76,7 @@ trusted_key_servers:
   - server_name: "matrix.org"
 
 enable_registration: true
+enable_registration_without_verification: true
 EOF
 
 echo "Файл homeserver.yaml успешно сгенерирован."
@@ -85,8 +86,8 @@ if [[ "$OS_TYPE" != *"MINGW"* && "$OS_TYPE" != *"MSYS"* ]]; then
     sudo chown -R 991:991 matrix/data/
 fi
 
-sudo mkdir -p /home/r9888/NextcloudData
-sudo chown -R 33:33 /home/r9888/NextcloudData
+sudo mkdir -p /home/${HOME}/NextcloudData
+sudo chown -R 33:33 /home/${HOME}/NextcloudData
 
 echo "Создаем хеш для vaultwarden..."
 if ! command -v argon2 &> /dev/null; then
@@ -106,6 +107,22 @@ sed -i '/^VAULTWARDEN_ADMIN_HASH=/d' .env
 
 echo "VAULTWARDEN_ADMIN_HASH=${HASH_TOKEN}" >> .env
 echo "Хэш успешно сгенерирован и добавлен в .env"
+
+if [ -z "$WEBNAMES_APIKEY" ]; then
+    echo "ОШИБКА: Переменная WEBNAMES_APIKEY не задана в .env"
+    exit 1
+fi
+
+if [ ! -d "./certbot-dns-webnames" ]; then
+    echo "Клонируем официальный репозиторий certbot-dns-webnames..."
+    git clone https://github.com/regtime-ltd/certbot-dns-webnames.git ./certbot-dns-webnames
+fi
+
+echo "Скачиваем конфигурационный файл конфигурации зоны с Webnames API..."
+curl -s -k "https://www.webnames.ru/scripts/json_domain_zone_manager.pl?action=get_config_certbot&domain=${SYNAPSE_SERVER_NAME}&apikey=${WEBNAMES_APIKEY}" -o ./certbot-dns-webnames/config.sh
+
+
+chmod +x ./certbot-dns-webnames/*.sh
 
 CERT_DIR="./certs/live/${SYNAPSE_SERVER_NAME}"
 
@@ -130,9 +147,8 @@ echo "Запуск Docker-контейнеров..."
 docker compose -f docker-compose.local.yaml up -d
 
 if [ "$NEED_REAL_CERT" = true ]; then
-    echo "Запуск Certbot для получения реальных SSL-сертификатов..."
-    
-    sudo rm -rf "${CERT_DIR}"
+    echo "Запуск официального Certbot + Webnames Hooks для получения реальных SSL..."
+    docker compose -f docker-compose.local.yaml build certbot
     docker compose -f docker-compose.local.yaml run --rm certbot
     
     echo "Перезагрузка конфигурации Nginx для применения реальных сертификатов..."

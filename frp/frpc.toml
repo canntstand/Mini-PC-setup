@@ -4,20 +4,11 @@ auth.method = "token"
 auth.token = "{{ .Envs.FRP_TOKEN }}"
 
 [[proxies]]
-name = "http_traffic"
-type = "tcp"
-localIP = "nginx_proxy"
-localPort = 80
-remotePort = 8080
-transport.proxyProtocolVersion = "v2"
-
-[[proxies]]
 name = "https_traffic"
 type = "tcp"
 localIP = "nginx_proxy"
 localPort = 443
 remotePort = 8443
-transport.proxyProtocolVersion = "v2"
 
 [[proxies]]
 name = "secure_ssh"

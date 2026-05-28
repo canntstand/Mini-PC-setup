@@ -53,21 +53,29 @@ services:
       - portainer
 
   certbot:
-    image: certbot/certbot:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot
     container_name: certbot
     volumes:
       - ./certs:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+      - ./certs-data:/var/lib/letsencrypt
+      - ./certbot-dns-webnames:/opt/certbot-dns-webnames
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     command: >
-      certonly --webroot
-      -w /var/www/certbot
-      -d "${SYNAPSE_SERVER_NAME}"
-      --email ${EMAIL}
+      certonly
+      --manual
+      --manual-auth-hook /opt/certbot-dns-webnames/authenticator.sh
+      --manual-cleanup-hook /opt/certbot-dns-webnames/cleanup.sh
+      --preferred-challenges dns-01
+      --manual-public-ip-logging-ok
       --agree-tos
       --no-eff-email
       --non-interactive
+      -d "${SYNAPSE_SERVER_NAME}"
+      -d "*.${SYNAPSE_SERVER_NAME}"
+      --email "${EMAIL}"
 
   nginx_exporter:
     image: nginx/nginx-prometheus-exporter:latest
@@ -90,7 +98,6 @@ services:
     environment:
       - FRP_SERVER_IP=${FRP_SERVER_IP}
       - FRP_TOKEN=${FRP_TOKEN}
-      - FRP_SSH_REMOTE_PORT=2222
     depends_on:
       - nginx
 
