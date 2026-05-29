@@ -98,8 +98,8 @@ fi
 echo "Запуск инфраструктуры настройки..."
 docker compose -f docker-compose.local.yaml up -d monitoring_configure
 
-echo "Ожидание завершения настройки и создания конфигурационных файлов..."
-while [ "$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure)" != "0" ] || [ ! -f "./matrix_alertmanager/matrix_alertmanager.env" ]; do
+echo "Ожидание завершения настройки..."
+until [ "$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure 2>/dev/null)" == "0" ] && [ -f "./matrix_alertmanager/matrix_alertmanager.env" ]; do
     echo "Жду завершения настройки и появления файла конфигурации..."
     sleep 3
 done
@@ -116,7 +116,7 @@ if [ "$NEED_REAL_CERT" = true ]; then
     docker compose -f docker-compose.local.yaml exec nginx nginx -s reload
 fi
 
-docker compose -f docker-compose.local.yaml wait
+sleep 15
 chmod +x scripts/create_admin.sh
 ./scripts/create_admin.sh
 
