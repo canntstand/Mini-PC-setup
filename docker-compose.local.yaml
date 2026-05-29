@@ -492,38 +492,39 @@ services:
     command:
       - |
         apk add --no-cache curl jq gettext docker-cli;
-        
+
         echo 'Ожидание запуска Synapse API...';
         until curl -s http://synapse:8008/_matrix/client/versions; do sleep 3; done;
-        
+
         echo 'Регистрация пользователя бота в Matrix...';
         docker exec synapse register_new_matrix_user -c /data/homeserver.yaml -u "${MATRIX_BOT_USERNAME}" -p "${MATRIX_BOT_PASSWORD}" --no-admin || echo 'Пользователь уже существует или пропущен';
-        
+
         echo 'Авторизация бота и получение Access Token...';
         LOGIN_JSON=$$(curl -s -X POST -H 'Content-Type: application/json' -d '{"type":"m.login.password","user":"${MATRIX_BOT_USERNAME}","password":"${MATRIX_BOT_PASSWORD}"}' http://synapse:8008/_matrix/client/v3/login);
-        
+
         TOKEN=$$(echo $$LOGIN_JSON | jq -r '.access_token');
         if [ "$$TOKEN" = "null" ] || [ -z "$$TOKEN" ]; then
           echo 'Ошибка: Не удалось получить access_token бота!';
           echo $$LOGIN_JSON;
           exit 1;
         fi;
-        
+
         echo 'Генерация alertmanager.yml на основе шаблона...';
         envsubst < /mnt/monitoring/alertmanager.template.yml > /mnt/monitoring/alertmanager.yml;
-        
+
         echo 'Создание динамического env-файла для matrix_alertmanager...';
         mkdir -p /mnt/matrix_alertmanager;
 
         cat <<EOF > /mnt/matrix_alertmanager/config.json
         {
           "homeserverUrl": "http://synapse:8008",
-          "userId": "@alertbot:frolovserver.ru",
+          "userId": "@$$MATRIX_BOT_USERNAME:$$SYNAPSE_SERVER_NAME",
           "accessToken": "$$TOKEN",
-          "appSecret": "$$MONITORING_SECRET"
+          "appSecret": "$$MONITORING_SECRET",
+          "roomId": "$$MATRIX_ROOM_ID"
         }
         EOF
-        
+
         echo 'Мониторинг успешно сконфигурирован!';
     deploy:
       resources:
