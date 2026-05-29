@@ -6,3 +6,5 @@ modules:
       valid_status_codes: [200, 201, 202, 301, 302]
       method: GET
       preferred_ip_protocol: "ip4"
+      headers:
+        Host: "frolovserver.ru"

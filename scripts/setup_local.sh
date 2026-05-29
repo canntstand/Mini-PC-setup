@@ -95,10 +95,17 @@ else
     NEED_REAL_CERT=false
 fi
 
-echo "Запуск основных сервисов..."
-MAIN_SERVICES="synapse synapse_db nginx nginx_exporter frpc navidrome audiobookshelf nextcloud nextcloud_db nextcloud_configure vaultwarden vaultwarden_db prometheus_init prometheus grafana node_exporter cadvisor portainer blackbox_exporter monitoring_configure alertmanager"
+echo "Запуск инфраструктуры настройки..."
+docker compose -f docker-compose.local.yaml up -d monitoring_configure
+
+echo "Ожидание завершения настройки..."
+while [ "$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure)" != "0" ]; do
+    sleep 2
+done
+
+echo "Запуск остальных сервисов..."
+MAIN_SERVICES="synapse synapse_db nginx nginx_exporter frpc navidrome audiobookshelf nextcloud nextcloud_db nextcloud_configure vaultwarden vaultwarden_db prometheus_init prometheus grafana node_exporter cadvisor portainer blackbox_exporter alertmanager matrix_alertmanager"
 docker compose -f docker-compose.local.yaml up -d $MAIN_SERVICES
-docker compose -f docker-compose.local.yaml wait monitoring_configure
 
 if [ "$NEED_REAL_CERT" = true ]; then
     echo "Получение реального сертификата..."
