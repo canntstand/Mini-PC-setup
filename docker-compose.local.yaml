@@ -519,8 +519,8 @@ services:
         {
           "homeserverUrl": "http://synapse:8008",
           "userId": "@alertbot:frolovserver.ru",
-          "accessToken": "$TOKEN",
-          "appSecret": "$MONITORING_SECRET"
+          "accessToken": "$$TOKEN",
+          "appSecret": "$$MONITORING_SECRET"
         }
         EOF
         

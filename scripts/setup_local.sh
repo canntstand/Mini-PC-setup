@@ -99,7 +99,7 @@ echo "Запуск инфраструктуры настройки..."
 docker compose -f docker-compose.local.yaml up -d monitoring_configure
 
 echo "Ожидание завершения настройки..."
-until [ "$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure 2>/dev/null)" == "0" ] && [ -f "./matrix_alertmanager/matrix_alertmanager.env" ]; do
+until [ "$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure 2>/dev/null)" == "0" ] && [ -f "./matrix_alertmanager/config.json" ]; do
     echo "Жду завершения настройки и появления файла конфигурации..."
     sleep 3
 done
