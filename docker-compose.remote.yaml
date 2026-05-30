@@ -39,27 +39,29 @@ services:
     depends_on:
       - uptime-kuma
     environment:
-      - KUMA_URL=http://127.0.0.1:3002
+      - KUMA_URL=http://uptime-kuma:3001
       - ADMIN_USER=${ADMIN_USER}
       - ADMIN_PASS=${ADMIN_PASSWORD}
     logging: *default-logging
-    command: >
+    command: |
       sh -c "
-      echo 'Ожидание запуска Kuma...';
-      until curl -s $$KUMA_URL > /dev/null; do sleep 5; done;
-
-      echo 'Создание администратора...';
-      curl -s -X POST $$KUMA_URL/api/v1/setup \
+      apk add --no-cache jq
+      
+      echo 'Ожидание запуска Kuma...'
+      until curl -s $KUMA_URL > /dev/null; do sleep 5; done
+      
+      echo 'Создание администратора...'
+      curl -s -X POST $KUMA_URL/api/v1/setup \
         -H 'Content-Type: application/json' \
-        -d '{\"username\":\"$$ADMIN_USER\",\"password\":\"$$ADMIN_PASS\"}';
-
-      echo 'Создание Push-монитора для сервера...';
-      TOKEN=$$(curl -s -X POST $$KUMA_URL/api/v1/login \
+        -d \"{\\\"username\\\":\\\"$ADMIN_USER\\\",\\\"password\\\":\\\"$ADMIN_PASS\\\"}\"
+      
+      echo 'Создание Push-монитора...'
+      TOKEN=$(curl -s -X POST $KUMA_URL/api/v1/login \
         -H 'Content-Type: application/json' \
-        -d '{\"username\":\"$$ADMIN_USER\",\"password\":\"$$ADMIN_PASS\"}' | jq -r '.token');
-
-      curl -s -X POST $$KUMA_URL/api/v1/monitor \
-        -H 'Authorization: Bearer $$TOKEN' \
+        -d \"{\\\"username\\\":\\\"$ADMIN_USER\\\",\\\"password\\\":\\\"$ADMIN_PASS\\\"}\" | jq -r '.token')
+      
+      curl -s -X POST $KUMA_URL/api/v1/monitor \
+        -H 'Authorization: Bearer $TOKEN' \
         -H 'Content-Type: application/json' \
-        -d '{\"name\":\"Home-Server\",\"type\":\"push\",\"heartbeat\":60}';
+        -d \"{\\\"name\\\":\\\"Home-Server\\\",\\\"type\\\":\\\"push\\\",\\\"heartbeat\\\":60}\"
       "
