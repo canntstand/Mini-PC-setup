@@ -17,6 +17,19 @@ services:
       - /lib/modules:/lib/modules:ro
     ports:
       - "51820:51820/udp"
+  
+  amnezia-awg:
+    image: amnezia-awg2
+    container_name: amnezia-awg
+    restart: always
+    network_mode: host
+    cap_add:
+      - CAP_NET_ADMIN
+      - CAP_SYS_MODULE
+    volumes:
+      - /lib/modules:/lib/modules:ro
+      - ./amnezia-data:/opt/amnezia/awg:rw
+    logging: *default-logging
 
   uptime-kuma:
     image: louislam/uptime-kuma:2.3.2
