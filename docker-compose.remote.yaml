@@ -33,21 +33,3 @@ services:
       resources:
         limits:
           memory: 512M
-
-  uptime-kuma-init:
-    image: curlimages/curl
-    container_name: uptime-kuma-init
-    depends_on:
-      - uptime-kuma
-    logging: *default-logging
-    environment:
-      - KUMA_URL=http://uptime-kuma:3001
-      - ADMIN_USER=${ADMIN_USER}
-      - ADMIN_PASS=${ADMIN_PASSWORD}
-    volumes:
-      - ./scripts/init-kuma.sh:/tmp/init-kuma.sh:ro
-    command: ["/bin/sh", "/tmp/init-kuma.sh"]
-    deploy:
-      resources:
-        limits:
-          memory: 512M

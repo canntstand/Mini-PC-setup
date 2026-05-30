@@ -41,6 +41,7 @@ http {
     server {
         listen 3001;
         server_name $SYNAPSE_SERVER_NAME;
+        
         location / {
             if ($is_family_vpn = 0) {
                 return 444; 

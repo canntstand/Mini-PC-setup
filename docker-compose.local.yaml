@@ -564,17 +564,42 @@ services:
   
   heartbeat_to_vps:
     image: alpine:latest
+    container_name: heartbeat_to_vps
+    user: root
+    restart: always
     environment:
       - SERVER_IP=${FRP_SERVER_IP}
-    command: >
-      sh -c "
-      apk add --no-cache curl;
-      PUSH_TOKEN=$$(curl -s http://$${SERVER_IP}:3001/api/v1/monitor | jq -r '.[0].pushToken');
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASS=${ADMIN_PASSWORD}
+    command: |
+      sh -c '
+      apk add --no-cache curl jq
+      
+      echo "Авторизация..."
+      TOKEN=$$(curl -s -X POST "http://$$SERVER_IP:3001/api/v1/login" \
+        -H "Content-Type: application/json" \
+        -d "$$(printf "{\x22username\x22:\x22%s\x22,\x22password\x22:\x22%s\x22}" "$$ADMIN_USER" "$$ADMIN_PASS")" | jq -r ".token")
+      
+      if [ -z "$$TOKEN" ] || [ "$$TOKEN" = "null" ]; then
+        echo "ОШИБКА: Не удалось получить токен авторизации!"
+        exit 1
+      fi
+      
+      echo "Получение Push-токена..."
+      PUSH_TOKEN=$$(curl -s -X GET "http://$$SERVER_IP:3001/api/v1/monitor" \
+        -H "Authorization: Bearer $$TOKEN" | jq -r ".[0].pushToken")
+        
+      if [ -z "$$PUSH_TOKEN" ] || [ "$$PUSH_TOKEN" = "null" ]; then
+        echo "ОШИБКА: Не удалось получить Push-токен! Убедитесь, что в Kuma создан хотя бы один монитор."
+        exit 1
+      fi
+      
+      echo "Запуск бесконечного цикла пингов (токен: $$PUSH_TOKEN)..."
       while true; do
-        curl -sS 'http://$$SERVER_IP:3001/api/push/'$PUSH_TOKEN'?status=up&msg=OK' > /dev/null;
-        sleep 60;
+        curl -sS "http://$$SERVER_IP:3001/api/push/$$PUSH_TOKEN?status=up&msg=OK" > /dev/null
+        sleep 60
       done
-      "
+      '
 
 volumes:
   synapse_db_data:
