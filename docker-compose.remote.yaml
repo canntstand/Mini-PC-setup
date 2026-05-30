@@ -25,15 +25,15 @@ services:
     container_name: uptime-kuma
     logging: *default-logging
     restart: always
-    ports:
-      - "127.0.0.1:3001:3001"
+    expose:
+      - "3001"
     volumes:
       - ./uptime-kuma-data:/app/data
     deploy:
       resources:
         limits:
           memory: 512M
-  
+
   uptime-kuma-init:
     image: curlimages/curl
     depends_on:
@@ -46,24 +46,20 @@ services:
     command: >
       sh -c "
       echo 'Ожидание запуска Kuma...';
-      until curl -s $KUMA_URL > /dev/null; do sleep 5; done;
-      
+      until curl -s $$KUMA_URL > /dev/null; do sleep 5; done;
+
       echo 'Создание администратора...';
-      curl -s -X POST $KUMA_URL/api/v1/setup \
+      curl -s -X POST $$KUMA_URL/api/v1/setup \
         -H 'Content-Type: application/json' \
-        -d '{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASS\"}';
-      
+        -d '{\"username\":\"$$ADMIN_USER\",\"password\":\"$$ADMIN_PASS\"}';
+
       echo 'Создание Push-монитора для сервера...';
-      TOKEN=$(curl -s -X POST $KUMA_URL/api/v1/login \
+      TOKEN=$$(curl -s -X POST $$KUMA_URL/api/v1/login \
         -H 'Content-Type: application/json' \
-        -d '{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASS\"}' | jq -r '.token');
-      
-      curl -s -X POST $KUMA_URL/api/v1/monitor \
-        -H 'Authorization: Bearer $TOKEN' \
+        -d '{\"username\":\"$$ADMIN_USER\",\"password\":\"$$ADMIN_PASS\"}' | jq -r '.token');
+
+      curl -s -X POST $$KUMA_URL/api/v1/monitor \
+        -H 'Authorization: Bearer $$TOKEN' \
         -H 'Content-Type: application/json' \
         -d '{\"name\":\"Home-Server\",\"type\":\"push\",\"heartbeat\":60}';
       "
-    deploy:
-      resources:
-        limits:
-          memory: 512M
