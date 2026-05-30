@@ -25,8 +25,8 @@ services:
     container_name: uptime-kuma
     logging: *default-logging
     restart: always
-    expose:
-      - "3001"
+    ports:
+      - "127.0.0.1:3002:3001"
     volumes:
       - ./uptime-kuma-data:/app/data
     deploy:
@@ -39,7 +39,7 @@ services:
     depends_on:
       - uptime-kuma
     environment:
-      - KUMA_URL=http://uptime-kuma:3001
+      - KUMA_URL=http://127.0.0.1:3002
       - ADMIN_USER=${ADMIN_USER}
       - ADMIN_PASS=${ADMIN_PASSWORD}
     logging: *default-logging
