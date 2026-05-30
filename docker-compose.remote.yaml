@@ -1,10 +1,35 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   frps:
     image: snowdreamtech/frps:latest
     container_name: frps
+    logging: *default-logging
     restart: always
     network_mode: host
     environment:
       - FRP_TOKEN=${FRP_TOKEN}
     volumes:
       - ./frp/frps.toml:/etc/frp/frps.toml:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2.3.2
+    container_name: uptime-kuma
+    logging: *default-logging
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./uptime-kuma-data:/app/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M

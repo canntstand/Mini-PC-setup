@@ -304,7 +304,7 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vaultwarden_db:5432/${POSTGRES_DB_VAULTWARDEN}
-      - DOMAIN=https://${SYNAPSE_SERVER_NAME}/vault
+      - DOMAIN=https://${SYNAPSE_SERVER_NAME}/vaultwarden
       - SIGNUPS_ALLOWED=true
       - WEBSOCKET_ENABLED=true
       - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_HASH}
@@ -452,20 +452,6 @@ services:
         limits:
           memory: 512M
 
-  blackbox_exporter:
-    image: prom/blackbox-exporter:v0.25.0
-    container_name: blackbox_exporter
-    logging: *default-logging
-    restart: unless-stopped
-    volumes:
-      - ./monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml
-    command:
-      - "--config.file=/etc/blackbox_exporter/config.yml"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
   monitoring_configure:
     image: alpine:3.20
     container_name: monitoring_configure
@@ -487,31 +473,27 @@ services:
         until curl -s http://synapse:8008/_matrix/client/versions; do sleep 3; done;
 
         echo '1. Регистрация пользователя бота в Matrix...';
-        docker exec synapse register_new_matrix_user -c /data/homeserver.yaml -u \"${MATRIX_BOT_USERNAME}\" -p \"${MATRIX_BOT_PASSWORD}\" --no-admin || echo 'Пользователь уже существует, пропускаем';
+        docker exec synapse register_new_matrix_user -c /data/homeserver.yaml -u \"$MATRIX_BOT_USERNAME\" -p \"$MATRIX_BOT_PASSWORD\" --no-admin || echo 'Пользователь уже существует, пропускаем';
 
         echo '2. Получение Access Token для бота...';
-        BOT_TOKEN=$$(curl -s -X POST -H 'Content-Type: application/json' \
-          -d \"{\\\"type\\\":\\\"m.login.password\\\",\\\"identifier\\\":{\\\"type\\\":\\\"m.id.user\\\",\\\"user\\\":\\\"$MATRIX_BOT_USERNAME\\\"},\\\"password\\\":\\\"$MATRIX_BOT_PASSWORD\\\"}\" \
-          http://synapse:8008/_matrix/client/v3/login | jq -r '.access_token');
+        BOT_TOKEN=$$(curl -s -X POST -H 'Content-Type: application/json' -d \"{\\\"type\\\":\\\"m.login.password\\\",\\\"identifier\\\":{\\\"type\\\":\\\"m.id.user\\\",\\\"user\\\":\\\"$MATRIX_BOT_USERNAME\\\"},\\\"password\\\":\\\"$MATRIX_BOT_PASSWORD\\\"}\" http://synapse:8008/_matrix/client/v3/login | jq -r '.access_token');
 
         if [ \"$$BOT_TOKEN\" = \"null\" ] || [ -z \"$$BOT_TOKEN\" ]; then
           echo 'ОШИБКА: Не удалось получить токен бота!'; exit 1;
-        fi
+        fi;
 
         echo '3. Создание комнаты и получение её внутреннего ID (!)...';
-        CREATE_ROOM_RESP=$$(curl -s -X POST -H \"Authorization: Bearer $$BOT_TOKEN\" -H 'Content-Type: application/json' \
-          -d \"{\\\"visibility\\\":\\\"private\\\",\\\"room_alias_name\\\":\\\"server-alerts\\\",\\\"name\\\":\\\"Server Alerts\\\",\\\"preset\\\":\\\"private_chat\\\",\\\"invite\\\":[\\\"@$ADMIN_USER:$SYNAPSE_SERVER_NAME\\\"]}\" \
-          http://synapse:8008/_matrix/client/v3/createRoom);
+        CREATE_ROOM_RESP=$$(curl -s -X POST -H \"Authorization: Bearer $$BOT_TOKEN\" -H 'Content-Type: application/json' -d \"{\\\"visibility\\\":\\\"private\\\",\\\"room_alias_name\\\":\\\"server-alerts\\\",\\\"name\\\":\\\"Server Alerts\\\",\\\"preset\\\":\\\"private_chat\\\",\\\"invite\\\":[\\\"@$ADMIN_USER:$SYNAPSE_SERVER_NAME\\\"]}\" http://synapse:8008/_matrix/client/v3/createRoom);
         
         ERRCODE=$$(echo \"$$CREATE_ROOM_RESP\" | jq -r '.errcode');
         
         if [ \"$$ERRCODE\" = \"M_ROOM_IN_USE\" ]; then
-          echo '-> Комната уже существует, получаем её ID через алиас...';
+          echo '-> Комната уже существует, получаем её ID...';
           ROOM_ID=$$(curl -s http://synapse:8008/_matrix/client/v3/directory/room/%23server-alerts%3A${SYNAPSE_SERVER_NAME} | jq -r '.room_id');
         else
           ROOM_ID=$$(echo \"$$CREATE_ROOM_RESP\" | jq -r '.room_id');
           echo '-> Комната успешно создана, инвайт отправлен!';
-        fi
+        fi;
 
         echo '4. Передача динамических данных для matrix_alertmanager...';
         echo \"export MATRIX_TOKEN=$$BOT_TOKEN\" > /mnt/monitoring/bot_env.sh;
@@ -539,18 +521,18 @@ services:
       - MATRIX_HOMESERVER_URL=http://synapse:8008
       - MATRIX_USER=@${MATRIX_BOT_USERNAME}:${SYNAPSE_SERVER_NAME}
       - APP_ALERTMANAGER_SECRET=${MONITORING_SECRET}
-    entrypoint: [ "/bin/sh", "-c" ]
+    entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         echo "Ожидание файла окружения от конфигуратора...";
         until [ -f /mnt/monitoring/bot_env.sh ]; do sleep 1; done;
-        
+
         echo "Чтение токена и ID комнаты...";
         . /mnt/monitoring/bot_env.sh
-        
+
         echo "Настройка маршрутизации (Ресивер -> Внутренний ID)..."
         export MATRIX_ROOMS="matrix-room-alerts/$${MATRIX_INTERNAL_ROOM_ID}"
-        
+
         echo "Запуск matrix-alertmanager...";
         exec node src/app.js
     depends_on:

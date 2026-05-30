@@ -1,11 +1,42 @@
 groups:
-  - name: blackbox_alerts
+  - name: container_alerts
     rules:
-      - alert: WebsiteDown
-        expr: probe_success == 0
+      - alert: ContainerDown
+        expr: (time() - container_last_seen{name!=""}) > 60
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "Сервис {{ $labels.instance }} упал!"
-          description: "Blackbox не смог достучаться до эндпоинта. Статус проверки: {{ $value }}"
+          summary: "Контейнер {{ $labels.name }} упал!"
+          description: "Контейнер {{ $labels.name }} не подает признаков жизни более 1 минуты."
+
+  - name: host_alerts
+    rules:
+      - alert: HighCpuUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокая нагрузка на CPU"
+          description: "Нагрузка на CPU сервера превышает 90% (текущее значение: {{ $value | printf \"%.2f\" }}%)."
+
+      - alert: LowMemory
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Мало оперативной памяти"
+          description: "Доступно менее 10% оперативной памяти (текущее значение: {{ $value | printf \"%.2f\" }}%)."
+
+  - name: disk_alerts
+    rules:
+      - alert: LowDiskSpace
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Заканчивается место на диске"
+          description: "Диск заполнен более чем на 85% (текущее значение: {{ $value | printf \"%.2f\" }}%)."
