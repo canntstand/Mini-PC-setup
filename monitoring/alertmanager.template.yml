@@ -11,5 +11,5 @@ route:
 receivers:
 - name: 'matrix-room-alerts'
   webhook_configs:
-  - url: 'http://matrix_alertmanager:3000/alerts?secret=${MONITORING_SECRET}&room=${MATRIX_ROOM_ID}'
+  - url: 'http://matrix_alertmanager:3000/alerts?secret=${MONITORING_SECRET}'
     send_resolved: true

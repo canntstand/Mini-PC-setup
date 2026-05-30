@@ -496,26 +496,32 @@ services:
         echo 'Регистрация пользователя бота в Matrix...';
         docker exec synapse register_new_matrix_user -c /data/homeserver.yaml -u "${MATRIX_BOT_USERNAME}" -p "${MATRIX_BOT_PASSWORD}" --no-admin || echo 'Пользователь уже существует или пропущен';
 
-        echo 'Авторизация бота для получения временного токена...';
-        LOGIN_JSON=$$(curl -s -X POST -H 'Content-Type: application/json' -d "{\"type\":\"m.login.password\",\"user\":\"${MATRIX_BOT_USERNAME}\",\"password\":\"${MATRIX_BOT_PASSWORD}\"}" http://synapse:8008/_matrix/client/v3/login);
+        echo 'Авторизация бота для получения токена...';
+        LOGIN_JSON=$$(curl -s -X POST -H 'Content-Type: application/json' \
+          -d "{\"type\":\"m.login.password\",\"identifier\":{\"type\":\"m.id.user\",\"user\":\"${MATRIX_BOT_USERNAME}\"},\"password\":\"${MATRIX_BOT_PASSWORD}\"}" \
+          http://synapse:8008/_matrix/client/v3/login);
+        
         TOKEN=$$(echo $$LOGIN_JSON | jq -r '.access_token');
 
         if [ "$$TOKEN" = "null" ] || [ -z "$$TOKEN" ]; then
-          echo 'Ошибка: Не удалось получить токен для входа в комнату!';
+          echo 'Ошибка: Не удалось получить токен!';
+          echo "Ответ сервера: $$LOGIN_JSON";
           exit 1;
         fi;
 
+        echo "$$TOKEN" > /mnt/monitoring/matrix_token.txt;
+        echo 'Токен успешно сохранен!';
+
         echo 'Автоматическое присоединение бота к комнате...';
-        curl -s -X POST -H "Authorization: Bearer $$TOKEN" -H 'Content-Type: application/json' -d '{}' "http://synapse:8008/_matrix/client/v3/rooms/${MATRIX_ROOM_ID}/join" || echo 'Бот уже состоит в комнате';
+        ROOM_ID_ENCODED=$$(printf "%s" "${MATRIX_ROOM_ID}" | jq -s -R -r @uri);
+        
+        curl -s -X POST -H "Authorization: Bearer $$TOKEN" -H 'Content-Type: application/json' \
+          -d '{}' "http://synapse:8008/_matrix/client/v3/rooms/$$ROOM_ID_ENCODED/join" || echo 'Не удалось зайти в комнату или бот уже там';
 
         echo 'Генерация alertmanager.yml на основе шаблона...';
         envsubst < /mnt/monitoring/alertmanager.template.yml > /mnt/monitoring/alertmanager.yml;
 
         echo 'Мониторинг успешно сконфигурирован!';
-    deploy:
-      resources:
-        limits:
-          memory: 512M
 
   alertmanager:
     image: prom/alertmanager:v0.27.0
@@ -538,26 +544,34 @@ services:
         limits:
           memory: 512M
 
-  matrix_alertmanager:
+  matrix_alertmanager:  
     image: jaywink/matrix-alertmanager:latest
     container_name: matrix_alertmanager
     logging: *default-logging
     restart: unless-stopped
+    volumes:
+      - ./monitoring:/mnt/monitoring:ro
     environment:
       - MATRIX_HOMESERVER_URL=http://synapse:8008
       - MATRIX_USER=@${MATRIX_BOT_USERNAME}:${SYNAPSE_SERVER_NAME}
-      - MATRIX_PASS=${MATRIX_BOT_PASSWORD} 
-      - APP_SECRET=${MONITORING_SECRET}
-      - MATRIX_ROOM_ID=${MATRIX_ROOM_ID} 
+      - APP_ALERTMANAGER_SECRET=${MONITORING_SECRET}
+      - MATRIX_ROOMS=matrix-room-alerts/${MATRIX_ROOM_ID}
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        echo "Ожидание генерации токена от конфигуратора...";
+        until [ -f /mnt/monitoring/matrix_token.txt ]; do sleep 1; done;
+        
+        echo "Токен найден, импорт...";
+        export MATRIX_TOKEN=$$(cat /mnt/monitoring/matrix_token.txt);
+        
+        echo "Запуск matrix-alertmanager...";
+        exec node src/app.js
     depends_on:
       synapse:
         condition: service_started
       monitoring_configure:
         condition: service_completed_successfully
-    deploy:
-      resources:
-        limits:
-          memory: 512M
 
 volumes:
   synapse_db_data:
