@@ -98,9 +98,20 @@ fi
 echo "Запуск инфраструктуры настройки..."
 docker compose -f docker-compose.local.yaml up -d monitoring_configure
 
+echo "Запуск инфраструктуры настройки..."
+docker compose -f docker-compose.local.yaml up -d monitoring_configure
+
 echo "Ожидание завершения настройки..."
-until [ "$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure 2>/dev/null)" == "0" ] && [ -f "./matrix_alertmanager/config.json" ]; do
-    echo "Жду завершения настройки и появления файла конфигурации..."
+until [ "$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure 2>/dev/null)" == "0" ]; do
+    EXIT_CODE=$(docker inspect -f '{{.State.ExitCode}}' monitoring_configure 2>/dev/null)
+    if [ "$EXIT_CODE" != "0" ] && [ "$EXIT_CODE" != "" ] && [ "$EXIT_CODE" != "-1" ]; then
+        echo "ОШИБКА: Контейнер monitoring_configure завершился с ошибкой (Код: $EXIT_CODE)!"
+        echo "Логи контейнера:"
+        docker compose -f docker-compose.local.yaml logs monitoring_configure
+        exit 1
+    fi
+
+    echo "Жду завершения настройки мониторинга..."
     sleep 3
 done
 
