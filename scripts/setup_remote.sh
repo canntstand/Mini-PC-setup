@@ -18,9 +18,6 @@ if [ -f "$CONFIG_FILE" ]; then
     exit 0
 fi
 
-echo "Инициализация структуры AmneziaWG..."
-mkdir -p "$DATA_DIR"
-
 gen_key() {
     docker run --rm amneziavpn/amnezia-wg:latest wg genkey
 }
