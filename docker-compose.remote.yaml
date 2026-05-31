@@ -6,7 +6,10 @@ x-logging: &default-logging
 
 services:
   amnezia-wg:
-    image: amneziavpn/amnezia-wg:latest
+    image: my-amnezia-wg:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.awg
     container_name: amnezia-wg
     restart: always
     network_mode: host
@@ -17,7 +20,7 @@ services:
     volumes:
       - /lib/modules:/lib/modules:ro
       - ./amnezia-data/client_server.conf:/opt/amnezia/awg/awg0.conf:ro
-    command: bash -c "awg-quick up wg0 --userspace"
+    logging: *default-logging
 
   uptime-kuma:
     image: louislam/uptime-kuma:2.3.2

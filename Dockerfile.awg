@@ -1,0 +1,14 @@
+FROM amneziavpn/amnezia-wg:latest
+
+RUN apt-get update && \
+    apt-get install -y git make gcc libmnl-dev && \
+    cd /tmp && \
+    git clone https://github.com/amnezia-vpn/amneziawg-tools && \
+    cd amneziawg-tools/src && \
+    make && \
+    make install && \
+    apt-get remove -y git make gcc && \
+    apt-get autoremove -y && \
+    rm -rf /tmp/*
+
+CMD ["sh", "-c", "awg-quick up /opt/amnezia/awg/awg0.conf && tail -f /dev/null"]
