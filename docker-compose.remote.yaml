@@ -45,21 +45,20 @@ services:
     image: ghcr.io/wg-easy/wg-easy:latest
     container_name: wg-easy
     environment:
-      - LANG=ru
+      - LANG=en
       - WG_HOST=${SERVER_IP}
       - PORT=51821
       - WG_PORT=51820
-      - WG_DEFAULT_ADDRESS=10.8.1.x
+      - WEBUI_HOST=127.0.0.1
+      - WG_DEFAULT_ADDRESS=10.8.1.0/24
       - WG_PERSISTENT_KEEPALIVE=25
+      - WG_ALLOWED_IPS=0.0.0.0/0, ::/0
       - EXPERIMENTAL_AWG=true
       - OVERRIDE_AUTO_AWG=awg
     volumes:
       - ./config:/etc/wireguard
       - /lib/modules:/lib/modules:ro
-    ports:
-      - "51820:51820/udp"
-    networks:
-      - vps_network
+    network_mode: "host"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
