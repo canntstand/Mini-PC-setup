@@ -12,8 +12,6 @@ services:
     restart: always
     volumes:
       - ./uptime-kuma-data:/app/data
-    ports:
-      - "3002:3001"
     networks:
       - vps_network
     deploy:
@@ -30,6 +28,7 @@ services:
       - "443:443"
       - "80:80"
       - "3001:3001"
+      - "3002:3002"
       - "2222:2222"
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
@@ -41,6 +40,33 @@ services:
       resources:
         limits:
           memory: 512M
+
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:latest
+    container_name: wg-easy
+    environment:
+      - LANG=ru
+      - WG_HOST=${SERVER_IP}
+      - PORT=51821
+      - WG_PORT=51820
+      - WG_DEFAULT_ADDRESS=10.8.1.x
+      - WG_PERSISTENT_KEEPALIVE=25
+      - EXPERIMENTAL_AWG=true
+      - OVERRIDE_AUTO_AWG=awg
+    volumes:
+      - ./config:/etc/wireguard
+      - /lib/modules:/lib/modules:ro
+    ports:
+      - "51820:51820/udp"
+    networks:
+      - vps_network
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
 
 networks:
   vps_network:

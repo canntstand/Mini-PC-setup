@@ -543,19 +543,6 @@ services:
         limits:
           memory: 512M
 
-  amnezia-client:
-    image: amnezia-awg2
-    container_name: amnezia-client
-    restart: always
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    volumes:
-      - /lib/modules:/lib/modules:ro
-        ./amnezia-data/client_home.conf:/opt/amnezia/awg/awg0.conf:rw
-    logging: *default-logging
-
   heartbeat_to_vps:
     image: alpine:latest
     container_name: heartbeat_to_vps
@@ -593,6 +580,20 @@ services:
         sleep 60
       done
       '
+  
+  amnezia-client:
+    image: ghcr.io/zeozeozeo/amneziawg-client:latest
+    container_name: amnezia-client
+    restart: always
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./amnezia-data:/config
+    logging: *default-logging
 
 volumes:
   synapse_db_data:
