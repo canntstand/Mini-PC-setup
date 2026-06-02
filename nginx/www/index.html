@@ -35,7 +35,6 @@
             gap: 32px;
         }
 
-        /* Главный заголовок над панелями */
         .main-header {
             text-align: center;
             margin-bottom: 8px;
@@ -62,7 +61,6 @@
             text-transform: uppercase;
         }
 
-        /* стили для двух независимых панелей */
         .glass-panel {
             background: var(--glass-light);
             backdrop-filter: blur(35px);
@@ -81,7 +79,6 @@
             box-shadow: 0 45px 85px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        /* Заголовок панели: белый цвет + линия-разделитель */
         .panel-header {
             margin-bottom: 32px;
             text-align: left;
@@ -95,16 +92,14 @@
         }
 
         .panel-title {
-            color: #ffffff;  /* теперь белый цвет */
+            color: #ffffff;
             font-size: 28px;
             font-weight: 700;
             margin: 0;
             letter-spacing: -0.5px;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-            /* убираем градиент, оставляем чисто белый */
         }
 
-        /* декоративный элемент справа от заголовка (необязательный, для баланса) */
         .panel-badge {
             font-size: 12px;
             color: rgba(255, 255, 255, 0.55);
@@ -277,9 +272,11 @@
             .tile-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
+
             .panel-title {
                 font-size: 26px;
             }
+
             .main-title {
                 font-size: 40px;
             }
@@ -289,9 +286,11 @@
             .tile-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
             .glass-panel {
                 padding: 28px 24px;
             }
+
             .panel-header {
                 padding-bottom: 12px;
                 margin-bottom: 28px;
@@ -303,16 +302,20 @@
                 padding: 24px 16px;
                 gap: 24px;
             }
+
             .tile-grid {
                 grid-template-columns: 1fr;
                 gap: 16px;
             }
+
             .glass-panel {
                 padding: 24px 18px;
             }
+
             .panel-title {
                 font-size: 24px;
             }
+
             .main-title {
                 font-size: 32px;
                 letter-spacing: -1px;
@@ -323,13 +326,11 @@
 
 <body>
 
-    <!-- ОБЩИЙ ЗАГОЛОВОК "ДОМАШНИЙ СЕРВЕР" НАД ДВУМЯ ПАНЕЛЯМИ -->
     <div class="main-header">
         <div class="main-title">Домашний сервер</div>
         <div class="main-sub">управление сервисами и инфраструктурой</div>
     </div>
 
-    <!-- ПАНЕЛЬ 1: СЕРВИСЫ -->
     <div class="glass-panel">
         <div class="panel-header">
             <h2 class="panel-title">✨ Сервисы</h2>
@@ -337,7 +338,6 @@
         </div>
 
         <div class="tile-grid">
-            <!-- Vaultwarden -->
             <a href="/vaultwarden/" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -354,7 +354,6 @@
                 <div class="tile-btn">Управлять</div>
             </a>
 
-            <!-- Matrix (Element) -->
             <a href="https://app.element.io" target="_blank" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -368,7 +367,6 @@
                 <div class="tile-btn">Чат</div>
             </a>
 
-            <!-- Navidrome -->
             <a href="/navidrome" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -384,7 +382,6 @@
                 <div class="tile-btn">Открыть</div>
             </a>
 
-            <!-- Nextcloud -->
             <a href="/nextcloud" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -398,12 +395,12 @@
                 <div class="tile-btn">Открыть</div>
             </a>
 
-            <!-- Audiobookshelf -->
             <a href="/audiobookshelf" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
                         <svg viewBox="0 0 24 24">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5v-15z" />
+                            <path
+                                d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5v-15z" />
                         </svg>
                     </div>
                     <h3>Audiobooks</h3>
@@ -414,7 +411,6 @@
         </div>
     </div>
 
-    <!-- ПАНЕЛЬ 2: ИНСТРУМЕНТЫ -->
     <div class="glass-panel">
         <div class="panel-header">
             <h2 class="panel-title">🛠️ Инструменты</h2>
@@ -422,7 +418,6 @@
         </div>
 
         <div class="tile-grid">
-            <!-- Borg UI -->
             <a href="/borg" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -438,7 +433,6 @@
                 <div class="tile-btn">Бэкапы</div>
             </a>
 
-            <!-- Uptime Kuma -->
             <a href="/uptime-kuma/" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -452,7 +446,6 @@
                 <div class="tile-btn">Статус</div>
             </a>
 
-            <!-- WireGuard Панель (wg-easy) -->
             <a href="/wg-easy/" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -467,12 +460,12 @@
                 <div class="tile-btn">Управлять</div>
             </a>
 
-            <!-- Portainer -->
             <a href="/portainer/" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
                         <svg viewBox="0 0 24 24">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                             <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
                             <line x1="12" y1="22.08" x2="12" y2="12" />
                         </svg>
@@ -483,7 +476,6 @@
                 <div class="tile-btn">Управлять</div>
             </a>
 
-            <!-- Grafana -->
             <a href="/grafana" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -501,7 +493,8 @@
 
     <a href="https://github.com/canntstand/Mini-PC-setup" target="_blank" class="github-footer">
         <svg viewBox="0 0 16 16">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+            <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
         </svg>
         <span>GitHub Проекта</span>
     </a>
