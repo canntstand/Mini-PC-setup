@@ -100,17 +100,13 @@ server {
         proxy_read_timeout 3600;
     }
 
-    location = /nextcloud {
-        return 301 https://$host/nextcloud/;
-    }
-
     location / {
         root /usr/share/nginx/html;
         index index.html;
         try_files $uri $uri/ =404;
     }
 
-    location /vaultwarden/ {
+    location /vaultwarden {
         proxy_pass http://vaultwarden:80;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -152,7 +148,7 @@ server {
     }
 
     location /uptime-kuma/ {
-        proxy_pass http://10.8.0.1:3001/; 
+        proxy_pass http://10.8.0.1; 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
@@ -163,7 +159,7 @@ server {
     }
 
     location /wg-easy/ {
-        proxy_pass http://10.8.0.1:3002/; 
+        proxy_pass http://10.8.0.1; 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
@@ -172,4 +168,10 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
     }
+
+    location = /uptime-kuma {return 301 https://$host/uptime-kuma/;}
+    location = /wg-easy {return 301 https://$host/wg-easy/;}
+    location = /nextcloud {return 301 https://$host/nextcloud/;}
+    location = /grafana {return 301 https://$host/grafana/;}
+    location = /portainer {return 301 https://$host/portainer/;}
 }

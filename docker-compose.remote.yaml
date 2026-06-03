@@ -9,11 +9,13 @@ services:
     image: louislam/uptime-kuma:2.3.2
     container_name: uptime-kuma
     logging: *default-logging
-    restart: always
+    restart: unless-stopped
+    environment:
+      - UPTIME_KUMA_BASE_URL=/uptime-kuma/
     volumes:
       - ./uptime-kuma-data:/app/data
-    networks:
-      - vps_network
+    ports:
+      - "127.0.0.1:51822:3001"
     deploy:
       resources:
         limits:
@@ -23,18 +25,17 @@ services:
     image: nginx:stable
     container_name: nginx_vps
     logging: *default-logging
-    restart: always
-    ports:
-      - "3001:3001"
-      - "3002:3002"
-    networks:
-      - vps_network
+    restart: unless-stopped
+    network_mode: "host"
     volumes:
       - ./nginx/nginx.remote.conf:/etc/nginx/nginx.conf:ro
     deploy:
       resources:
         limits:
           memory: 512M
+    depends_on:
+      - wg-easy
+      - uptime-kuma
 
   wg-easy:
     image: ghcr.io/wg-easy/wg-easy:15.3
@@ -46,6 +47,7 @@ services:
       - WG_PORT=51820
       - WG_DEFAULT_ADDRESS=10.8.0.x
       - PROMETHEUS_ENABLED=true
+      - WG_BASE_URL=/wg-easy
       - INIT_ENABLED=true
       - INIT_USERNAME=${ADMIN_USER}
       - INIT_PASSWORD=${ADMIN_PASSWORD}
@@ -63,9 +65,3 @@ services:
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-
-networks:
-  vps_network:
-    ipam:
-      config:
-        - subnet: 10.90.0.0/16
