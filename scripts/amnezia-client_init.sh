@@ -1,3 +1,4 @@
+#!/bin/bash
 find /etc/amnezia/amneziawg -mindepth 1 -delete
 
 COUNTER=0

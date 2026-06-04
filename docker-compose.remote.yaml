@@ -4,6 +4,7 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
+services:
   nginx:
     image: nginx:stable
     container_name: nginx_vps
