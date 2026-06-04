@@ -108,7 +108,7 @@ services:
     environment:
       - TZ=Europe/Moscow
       - ADMIN_USER=${ADMIN_USER}
-      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     deploy:
       resources:
