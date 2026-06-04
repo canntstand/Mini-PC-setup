@@ -100,17 +100,22 @@ if ! grep -q "^ADMIN_PASSWORD_HASH=" "$ENV_FILE"; then
     log_info "Начинаю генерацию хэша пароля..."
     BCRYPT_HASH=$(htpasswd -bnBC 10 "" "$ADMIN_PASSWORD" | tr -d ':\n' | sed 's/\$2y\$/\$2a\$/')
     
-    echo "ADMIN_PASSWORD_HASH=$BCRYPT_HASH" >> "$ENV_FILE"
-    log_success "ADMIN_PASSWORD_HASH добавлен в $ENV_FILE."
-    
     ESCAPED_HASH=$(echo "$BCRYPT_HASH" | sed 's/\$/\$\$/g')
+    echo "ADMIN_PASSWORD_HASH=$ESCAPED_HASH" >> "$ENV_FILE"
+    log_success "ADMIN_PASSWORD_HASH успешно добавлен в $ENV_FILE с экранированием."
+    
     export ADMIN_PASSWORD_HASH="$ESCAPED_HASH"
 else
     log_info "ADMIN_PASSWORD_HASH уже существует в .env."
     RAW_HASH=$(grep "^ADMIN_PASSWORD_HASH=" "$ENV_FILE" | cut -d= -f2-)
-    ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/\$\$/g')
-    export ADMIN_PASSWORD_HASH="$ESCAPED_HASH"
+    if [[ "$RAW_HASH" != *"\$\$"* ]]; then
+        ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/\$\$/g')
+        export ADMIN_PASSWORD_HASH="$ESCAPED_HASH"
+    else
+        export ADMIN_PASSWORD_HASH="$RAW_HASH"
+    fi
 fi
+
 
 # ==========================================
 # 5. НАСТРОЙКА SSL СЕРТИФИКАТОВ (CERTBOT)
@@ -123,10 +128,10 @@ if [ ! -f "$GATUS_CONFIG_FILE" ]; then
 fi
 
 if [ ! -d "./certbot-dns-webnames" ]; then
-    git clone https://github.com ./certbot-dns-webnames
+    git clone https://github.com/regtime-ltd/certbot-dns-webnames.git ./certbot-dns-webnames
 fi
 
-curl -s -k "https://webnames.ru{SYNAPSE_SERVER_NAME}&apikey=${WEBNAMES_APIKEY}" -o ./certbot-dns-webnames/config.sh
+curl -s -k "https://www.webnames.ru/scripts/json_domain_zone_manager.pl?action=get_config_certbot&domain=${SYNAPSE_SERVER_NAME}&apikey=${WEBNAMES_APIKEY}" -o ./certbot-dns-webnames/config.sh
 chmod +x ./certbot-dns-webnames/*.sh
 
 NEED_REAL_CERT=false
