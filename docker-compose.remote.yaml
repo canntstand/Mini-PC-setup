@@ -4,29 +4,6 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
-services:
-  uptime-kuma:
-    image: louislam/uptime-kuma:2.3.2
-    container_name: uptime-kuma
-    logging: *default-logging
-    restart: unless-stopped
-    environment:
-      - UPTIME_KUMA_BASE_URL=/uptime-kuma/
-      - UPTIME_KUMA_DB_TYPE=sqlite
-    volumes:
-      - ./uptime-kuma-data:/app/data
-    ports:
-      - "127.0.0.1:51822:3001"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    healthcheck:
-      test: ["CMD", "node", "extra/healthcheck.js"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   nginx:
     image: nginx:stable
     container_name: nginx_vps
@@ -47,7 +24,7 @@ services:
     depends_on:
       wg-easy:
         condition: service_healthy
-      uptime-kuma:
+      gatus:
         condition: service_healthy
   
   certbot:
@@ -101,6 +78,8 @@ services:
       - INIT_ENABLED=true
       - INIT_USERNAME=${ADMIN_USER}
       - INIT_PASSWORD=${ADMIN_PASSWORD}
+      - INIT_HOST=${SERVER_IP}
+      - INIT_PORT=51820
     volumes:
       - ./config:/etc/wireguard
       - /lib/modules:/lib/modules:ro
@@ -115,18 +94,26 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
-  kuma_init:
-    build:
-      context: .
-      dockerfile: Dockerfile.kuma_init
-    container_name: kuma_init
-    restart: "no"  
-    network_mode: "host"
+  
+  gatus:
+    image: twinproduction/gatus:stable
+    container_name: gatus
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:51822:8080"
+    volumes:
+      - ./gatus/config:/config
+      - ./gatus/data:/data
     environment:
-      - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
-      - ADMIN_USER=${ADMIN_USER}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-    depends_on:
-      uptime-kuma:
-        condition: service_healthy
+      - TZ=Europe/Moscow
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

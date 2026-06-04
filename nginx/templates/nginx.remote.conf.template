@@ -175,8 +175,8 @@ server {
         proxy_set_header X-Forwarded-Proto https;
     }
 
-    location /uptime-kuma/ {
-        proxy_pass http://127.0.0.1:51822; 
+    location /gatus/ {
+        proxy_pass http://127.0.0.1:51822/; 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
@@ -197,8 +197,8 @@ server {
         proxy_set_header X-Forwarded-Proto https;
     }
 
-    location = /uptime-kuma {
-        return 301 https://$host/uptime-kuma/;
+    location = /gatus {
+        return 301 https://$host/gatus/;
     }
     
     location = /wg-easy {

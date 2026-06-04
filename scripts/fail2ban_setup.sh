@@ -26,7 +26,7 @@ elif [[ "$DISTRO" == "centos" || "$DISTRO" == "rhel" || "$DISTRO" == "rocky" || 
     sudo dnf install fail2ban -y 2>/dev/null || sudo yum install fail2ban -y
 
 else
-    echo "Критическая ошибка: Дистрибутив '$DISTRO' не поддерживается."
+    echo "Дистрибутив '$DISTRO' не поддерживается."
     exit 1
 fi
 

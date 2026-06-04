@@ -1,0 +1,15 @@
+security:
+  basic:
+    username: "${ADMIN_USER}"
+    password: "${ADMIN_PASSWORD_HASH}"
+
+endpoints:
+  - name: "Is Local Server Alive?"
+    url: "https://${SYNAPSE_SERVER_NAME}/health-check"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: "failure"
+        threshold: 2
+        period: 1m

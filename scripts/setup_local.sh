@@ -45,7 +45,7 @@ if [ -z "$SECRET_VAULTWARDEN_PASSWORD" ] || [ -z "$SYNAPSE_SERVER_NAME" ] || [ -
 fi
 
 echo "Подготовка директорий..."
-DIRS=("./matrix/data" "./grafana/data" "./vaultwarden/data" "./synapse/data" "./navidrome/data" "./audiobookshelf/data" "./prometheus/data" "./nginx/templates" "./matrix_alertmanager")
+DIRS=("./matrix/data" "./grafana/data" "./vaultwarden/data" "./synapse/data" "./navidrome/data" "./audiobookshelf/data" "./prometheus/data" "./matrix_alertmanager")
 for dir in "${DIRS[@]}"; do
     mkdir -p "$dir"
 done
