@@ -47,7 +47,7 @@ services:
     depends_on:
       wg-easy:
         condition: service_healthy
-      uptime_kuma:
+      uptime-kuma:
         condition: service_healthy
   
   certbot:
@@ -110,7 +110,7 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     healthcheck:
-      test: ["CMD", "awg", "show", "awg0"]
+      test: ["CMD", "awg", "show", "wg0"]
       interval: 30s
       timeout: 10s
       retries: 3

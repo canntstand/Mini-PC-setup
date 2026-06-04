@@ -13,6 +13,9 @@ else
     exit 1
 fi
 
+mkdir -p certs certs-data
+sudo chmod -R 777 ./certs ./certs-data
+
 echo "Настройка сертификатов..."
 if [ ! -d "./certbot-dns-webnames" ]; then
     git clone https://github.com/regtime-ltd/certbot-dns-webnames.git ./certbot-dns-webnames

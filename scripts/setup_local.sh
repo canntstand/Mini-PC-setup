@@ -45,12 +45,12 @@ if [ -z "$SECRET_VAULTWARDEN_PASSWORD" ] || [ -z "$SYNAPSE_SERVER_NAME" ] || [ -
 fi
 
 echo "Подготовка директорий..."
-DIRS=("./matrix/data" "./grafana/data" "./vaultwarden/data" "./synapse/data" "./navidrome/data" "./audiobookshelf/data" "./certs" "./prometheus/data" "./nginx/templates" "./matrix_alertmanager")
+DIRS=("./matrix/data" "./grafana/data" "./vaultwarden/data" "./synapse/data" "./navidrome/data" "./audiobookshelf/data" "./prometheus/data" "./nginx/templates" "./matrix_alertmanager")
 for dir in "${DIRS[@]}"; do
     mkdir -p "$dir"
 done
 
-sudo chmod -R 777 ./grafana ./matrix ./nextcloud ./vaultwarden ./synapse ./navidrome ./audiobookshelf ./certs
+sudo chmod -R 777 ./grafana ./matrix ./nextcloud ./vaultwarden ./synapse ./navidrome ./audiobookshelf
 
 sudo mkdir -p "/home/${HOME_USER_NAME}/NextcloudData"
 sudo chown -R 33:33 "/home/${HOME_USER_NAME}/NextcloudData"
