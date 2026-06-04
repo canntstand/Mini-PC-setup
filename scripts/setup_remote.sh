@@ -186,18 +186,20 @@ add_iptables_rule FORWARD -i wg0 -j ACCEPT
 add_iptables_rule FORWARD -o wg0 -j ACCEPT
 add_iptables_rule POSTROUTING -t nat -s 10.8.0.0/24 -o "$DEFAULT_IF" -j MASQUERADE
 
+if ! command -v netfilter-persistent &>/dev/null; then
+    log_warn "netfilter-persistent не найден. Устанавливаю iptables-persistent..."
+    sudo apt-get update -qq && sudo apt-get install -y iptables-persistent
+fi
+
 if command -v netfilter-persistent &>/dev/null; then
     netfilter-persistent save
-    log_info "Правила iptables сохранены (netfilter-persistent)."
-elif command -v iptables-save &>/dev/null; then
-    if [ -d /etc/iptables ]; then
-        iptables-save > /etc/iptables/rules.v4
-        log_info "Правила сохранены в /etc/iptables/rules.v4"
-    else
-        log_warn "Не найден netfilter-persistent и директория /etc/iptables. Правила НЕ сохранятся после перезагрузки."
-    fi
+    log_success "Правила iptables сохранены (netfilter-persistent)."
+elif command -v iptables-save &>/dev/null && [ -d /etc/iptables ]; then
+    iptables-save > /etc/iptables/rules.v4
+    log_info "Правила сохранены в /etc/iptables/rules.v4"
 else
-    log_warn "Утилиты сохранения iptables не найдены. Установите iptables-persistent вручную."
+    log_error "Не удалось сохранить правила iptables. После перезагрузки они пропадут."
+    log_error "Установите iptables-persistent вручную или настройте сохранение через iptables-save."
 fi
 
 log_success "Сетевые правила применены."

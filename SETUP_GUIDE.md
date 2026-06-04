@@ -13,7 +13,7 @@
 
 ## 2. На удаленном сервере
 1. Установить [AmneziaWG Kernel Module](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module)
-2. `chmod +x scripts/setup_remote.sh && ./scripts/setup_remote.sh`
+2. `chmod +x scripts/setup_remote.sh && sudo ./scripts/setup_remote.sh`
 3. `ssh -L 51821:127.0.0.1:51821 user@ip`
 4. Перейти в браузере по `http://127.0.0.1:51821` в WireGuard панель. Cоздать админ пользователя и всех клиентов (в зависимости от того сколько устройств планируется подключить к VPN).
 5. Скачать конфиг клиента, которому принадлежит IP `10.8.0.2` (чтобы подключить локальный сервер).
