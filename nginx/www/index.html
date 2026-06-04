@@ -16,6 +16,7 @@
             --gradient-glow: rgba(228, 86, 157, 0.2);
             --glass-light: rgba(255, 255, 255, 0.12);
             --tile-bg: rgba(35, 35, 45, 0.48);
+            --vps-green: #34d399;
         }
 
         * {
@@ -131,6 +132,34 @@
             min-height: 250px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(15px);
+        }
+
+        .tile.tile-external::after {
+            content: "● VPS";
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: rgba(52, 211, 153, 0.12);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            color: var(--vps-green);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            text-transform: uppercase;
+            line-height: 1;
+            pointer-events: none;
+            z-index: 2;
+            transition: all 0.4s ease;
+        }
+
+        .tile.tile-external:hover::after {
+            background: rgba(52, 211, 153, 0.25);
+            border-color: var(--vps-green);
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.3);
         }
 
         .tile-content {
@@ -320,6 +349,13 @@
                 font-size: 32px;
                 letter-spacing: -1px;
             }
+
+            .tile.tile-external::after {
+                top: 10px;
+                right: 12px;
+                font-size: 9px;
+                padding: 3px 8px;
+            }
         }
     </style>
 </head>
@@ -433,33 +469,6 @@
                 <div class="tile-btn">Бэкапы</div>
             </a>
 
-            <a href="/gatus/" class="tile">
-                <div class="tile-content">
-                    <div class="icon-box">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                        </svg>
-                    </div>
-                    <h3>Gatus</h3>
-                    <p>Контроль аптайма и отслеживание статуса локального сервера.</p>
-                </div>
-                <div class="tile-btn">Статус</div>
-            </a>
-
-            <a href="/wg-easy/" class="tile">
-                <div class="tile-content">
-                    <div class="icon-box">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            <path d="M12 8v8 M9 11l3-3 3 3" />
-                        </svg>
-                    </div>
-                    <h3>WireGuard Панель</h3>
-                    <p>Управление VPN сетью и пользователями.</p>
-                </div>
-                <div class="tile-btn">Управлять</div>
-            </a>
-
             <a href="/portainer/" class="tile">
                 <div class="tile-content">
                     <div class="icon-box">
@@ -487,6 +496,33 @@
                     <p>Мониторинг ресурсов, нагрузки и системных метрик железа.</p>
                 </div>
                 <div class="tile-btn">Смотреть</div>
+            </a>
+
+            <a href="/wg-easy/" class="tile tile-external" title="Размещён на внешнем VPS — доступен независимо от домашнего сервера">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            <path d="M12 8v8 M9 11l3-3 3 3" />
+                        </svg>
+                    </div>
+                    <h3>WireGuard Панель</h3>
+                    <p>Управление VPN сетью и пользователями.</p>
+                </div>
+                <div class="tile-btn">Управлять</div>
+            </a>
+
+            <a href="/gatus/" class="tile tile-external" title="Размещён на внешнем VPS — доступен независимо от домашнего сервера">
+                <div class="tile-content">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                    </div>
+                    <h3>Gatus</h3>
+                    <p>Контроль аптайма и отслеживание статуса локального сервера.</p>
+                </div>
+                <div class="tile-btn">Статус</div>
             </a>
         </div>
     </div>
