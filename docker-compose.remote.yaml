@@ -25,7 +25,13 @@ services:
     depends_on:
       wg-easy:
         condition: service_healthy
-  
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   certbot:
     build:
       context: .
@@ -92,7 +98,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-  
+
   gatus:
     image: twinproduction/gatus:stable
     container_name: gatus
@@ -112,3 +118,6 @@ services:
       resources:
         limits:
           memory: 512M
+    depends_on:
+      nginx:
+        condition: service_healthy

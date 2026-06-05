@@ -173,6 +173,11 @@ fi
 print_separator
 log_info "Применение системных настроек ядра Linux..."
 
+if ! lsmod | grep -q wireguard && ! lsmod | grep -q amneziawg; then
+    log_error "Модуль wireguard/amneziawg не загружен."
+    exit 1
+fi
+
 add_sysctl_param() {
     local param="$1"
     local value="$2"

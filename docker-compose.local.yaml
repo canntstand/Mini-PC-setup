@@ -23,6 +23,12 @@ services:
       resources:
         limits:
           memory: 1.5G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/_matrix/client/versions"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
 
   synapse_db:
     container_name: synapse_db
@@ -59,16 +65,30 @@ services:
       - ./nginx/templates/nginx.local.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./nginx/www:/usr/share/nginx/html:ro
     depends_on:
-      - synapse
-      - navidrome
-      - audiobookshelf
-      - nextcloud
-      - vaultwarden
-      - portainer
+      synapse:
+        condition: service_started
+      navidrome:
+        condition: service_started
+      audiobookshelf:
+        condition: service_started
+      nextcloud:
+        condition: service_started
+      vaultwarden:
+        condition: service_started
+      portainer:
+        condition: service_started
+      amnezia-client:
+        condition: service_healthy
     deploy:
       resources:
         limits:
           memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   nginx_exporter:
     image: nginx/nginx-prometheus-exporter:latest
@@ -79,7 +99,8 @@ services:
       - "9113:9113"
     command: --nginx.scrape-uri=http://nginx_proxy:8080/stub_status
     depends_on:
-      - nginx
+      nginx:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -175,7 +196,13 @@ services:
       resources:
         limits:
           memory: 1.5G
-  
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /var/www/html/config/config.php && php occ status"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
   nextcloud_cron:
     image: nextcloud:stable
     container_name: nextcloud_cron
@@ -200,18 +227,14 @@ services:
     restart: "no"
     user: www-data
     depends_on:
-      - nextcloud
+      nextcloud:
+        condition: service_healthy
     volumes:
       - ./nextcloud/html:/var/www/html
       - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
     entrypoint: /bin/sh
     command: >
       -c "
-      echo 'Waiting for Nextcloud to be installed and ready...';
-      until [ -f /var/www/html/config/config.php ] && php occ status >/dev/null 2>&1; do 
-        sleep 2; 
-      done;
-        
       echo 'Applying system fixes...';
 
       php occ config:system:set trusted_domains 1 --value='${SYNAPSE_SERVER_NAME}';
@@ -436,9 +459,6 @@ services:
       sh -c "
         apk add --no-cache curl jq gettext docker-cli;
 
-        echo 'Ожидание запуска Synapse API...';
-        until curl -s http://synapse:8008/_matrix/client/versions; do sleep 3; done;
-
         echo '1. Регистрация пользователя бота в Matrix...';
         docker exec synapse register_new_matrix_user -c /data/homeserver.yaml -u \"$$MATRIX_BOT_USERNAME\" -p \"$$MATRIX_BOT_PASSWORD\" --no-admin || echo 'Пользователь уже существует, пропускаем';
 
@@ -473,7 +493,7 @@ services:
       "
     depends_on:
       synapse:
-        condition: service_started
+        condition: service_healthy
       prometheus_init:
         condition: service_completed_successfully
 
@@ -504,7 +524,7 @@ services:
         exec node src/app.js
     depends_on:
       synapse:
-        condition: service_started
+        condition: service_healthy
       monitoring_configure:
         condition: service_completed_successfully
 
@@ -528,13 +548,13 @@ services:
       resources:
         limits:
           memory: 512M
-  
+
   amnezia-client:
     build:
       context: .
       dockerfile: Dockerfile.amnezia
     container_name: amnezia-client
-    network_mode: host
+    restart: unless-stopped
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -543,6 +563,18 @@ services:
     volumes:
       - ./amnezia-data:/config
     logging: *default-logging
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.default.forwarding=1
+    healthcheck:
+      test: ["CMD", "awg", "show", "wg0"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   synapse_db_data:
