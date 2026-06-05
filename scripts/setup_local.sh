@@ -33,8 +33,9 @@ else
     exit 1
 fi
 
-if [[ "$DISTRO" == "arch" ]]; then
+if [[ "$DISTRO" == "arch" || "$DISTRO" == "endeavouros" ]]; then
     sudo pacman -Syu --noconfirm argon2 openssl
+    log_warn "У вас Arch Linux, если в скрипте будут появляться ошибки, попробуйте перезагрузить систему!"
 elif [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" || "$DISTRO" == "pop" || "$DISTRO" == "mint" ]]; then
     sudo apt update
     sudo apt install -y argon2 openssl
@@ -87,7 +88,7 @@ log_success "Переменные окружения загружены и пр�
 
 # ==========================================
 log_info "Создание необходимых директорий..."
-DIRS=("./matrix/data" "./grafana/data" "./vaultwarden/data" "./synapse/data" "./navidrome/data" "./audiobookshelf/data" "./prometheus/data" "./matrix_alertmanager")
+DIRS=("./matrix/data" "./grafana/data" "./vaultwarden/data" "./synapse/data" "./navidrome/data" "./audiobookshelf/data" "./prometheus/data" "./matrix_alertmanager" "./nextcloud")
 for dir in "${DIRS[@]}"; do
     mkdir -p "$dir"
 done
@@ -170,7 +171,7 @@ done
 
 # ==========================================
 log_info "Запуск основных сервисов..."
-MAIN_SERVICES="synapse synapse_db nginx nginx_exporter navidrome audiobookshelf nextcloud nextcloud_db nextcloud_configure vaultwarden vaultwarden_db prometheus_init prometheus grafana node_exporter cadvisor portainer alertmanager matrix_alertmanager"
+MAIN_SERVICES="synapse synapse_db nginx amnezia-client nginx_exporter navidrome audiobookshelf nextcloud nextcloud_db nextcloud_configure vaultwarden vaultwarden_db prometheus_init prometheus grafana node_exporter cadvisor portainer alertmanager matrix_alertmanager"
 docker compose -f docker-compose.local.yaml up -d $MAIN_SERVICES
 
 log_info "Ожидание стабилизации сервисов (15 секунд)..."
@@ -181,5 +182,10 @@ chmod +x scripts/create_admin.sh
 ./scripts/create_admin.sh
 
 print_separator
-log_success "ВСЕ СЛУЖБЫ УСПЕШНО ЗАПУЩЕНЫ!"
+echo -e "${CYAN}               📊 ТЕКУЩИЙ СТАТУС ЗАПУЩЕННЫХ СЕРВИСОВ 📊${NC}"
 print_separator
+sudo docker compose -f docker-compose.remote.yaml ps
+
+print_separator
+
+log_success "Инициализация инфраструктуры завершена."

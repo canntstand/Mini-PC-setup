@@ -534,7 +534,6 @@ services:
       context: .
       dockerfile: Dockerfile.amnezia
     container_name: amnezia-client
-    restart: always
     network_mode: host
     cap_add:
       - NET_ADMIN
