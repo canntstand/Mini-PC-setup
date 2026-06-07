@@ -3,7 +3,7 @@ web:
   
 endpoints:
   - name: "Is Local Server Alive?"
-    url: "https://${SYNAPSE_SERVER_NAME}/health-check"
+    url: "http://nginx_vps/health-check"
     interval: 60s
     conditions:
       - "[STATUS] == 200"
