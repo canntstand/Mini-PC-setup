@@ -22,8 +22,12 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
+print_separator
+echo -e "${CYAN}         🚀 ИНИЦИАЛИЗАЦИЯ УДАЛЕННОЙ ИНФРАСТРУКТУРЫ 🚀${NC}"
+print_separator
+
 # ==========================================
-log_info "Определение дистрибутива и установка базовых зависимостей..."
+log_info "Определение дистрибутива и установка зависимостей..."
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     DISTRO=$ID
@@ -54,10 +58,6 @@ for tool in openssl curl git; do
     fi
 done
 log_success "Базовые зависимости проверены."
-
-print_separator
-echo -e "${CYAN}         🚀 ИНИЦИАЛИЗАЦИЯ И НАСТРОЙКА ИНФРАСТРУКТУРЫ SERVEHUB-2 🚀${NC}"
-print_separator
 
 # ==========================================
 log_info "Проверка статуса демона Docker..."
@@ -172,9 +172,24 @@ fi
 # ==========================================
 print_separator
 log_info "Применение системных настроек ядра Linux..."
+modules=$(lsmod)
 
-if ! lsmod | grep -q wireguard && ! lsmod | grep -q amneziawg; then
-    log_error "Модуль wireguard/amneziawg не загружен."
+if ! echo "$modules" | grep -q amneziawg; then
+    log_warn "Модуль amneziawg не загружен. Пытаюсь загрузить..."
+    if sudo modprobe amneziawg 2>/dev/null; then
+        log_success "Модуль amneziawg успешно загружен."
+    else
+        log_error "Не удалось загрузить модуль amneziawg."
+        log_error "Убедитесь, что пакет amneziawg-dkms установлен."
+        exit 1
+    fi
+else
+    log_success "Модуль amneziawg уже загружен."
+fi
+
+
+if ! echo "$modules" | grep -q amneziawg; then
+    echo "Модуль amneziawg не доступен после попытки загрузки."
     exit 1
 fi
 

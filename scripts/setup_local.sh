@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# ------------------------------
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -18,13 +17,17 @@ print_separator() {
     echo -e "${CYAN}--------------------------------------------------------------------------------${NC}"
 }
 
-# ==========================================
+if [[ "$EUID" -ne 0 ]]; then
+    log_error "Этот скрипт должен выполняться с правами root. Используйте sudo."
+    exit 1
+fi
+
 print_separator
-echo -e "${CYAN}         🚀 ИНИЦИАЛИЗАЦИЯ ИНФРАСТРУКТУРЫ (ЛОКАЛЬНАЯ СБОРКА) 🚀${NC}"
+echo -e "${CYAN}         🚀 ИНИЦИАЛИЗАЦИЯ ЛОКАЛЬНОЙ ИНФРАСТРУКТУРЫ 🚀${NC}"
 print_separator
 
 # ==========================================
-log_info "Определение дистрибутива и установка системных зависимостей..."
+log_info "Определение дистрибутива и установка зависимостей..."
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     DISTRO=$ID
@@ -172,9 +175,24 @@ done
 # ==========================================
 print_separator
 log_info "Применение системных настроек ядра Linux..."
+modules=$(lsmod)
 
-if ! lsmod | grep -q wireguard && ! lsmod | grep -q amneziawg; then
-    log_error "Модуль wireguard/amneziawg не загружен."
+if ! echo "$modules" | grep -q amneziawg; then
+    log_warn "Модуль amneziawg не загружен. Пытаюсь загрузить..."
+    if sudo modprobe amneziawg 2>/dev/null; then
+        log_success "Модуль amneziawg успешно загружен."
+    else
+        log_error "Не удалось загрузить модуль amneziawg."
+        log_error "Убедитесь, что пакет amneziawg-dkms установлен."
+        exit 1
+    fi
+else
+    log_success "Модуль amneziawg уже загружен."
+fi
+
+
+if ! echo "$modules" | grep -q amneziawg; then
+    echo "Модуль amneziawg не доступен после попытки загрузки."
     exit 1
 fi
 
