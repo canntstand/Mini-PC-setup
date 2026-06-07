@@ -34,7 +34,7 @@ else
 fi
 
 if [[ "$DISTRO" == "arch" || "$DISTRO" == "endeavouros" ]]; then
-    sudo pacman -Syu --noconfirm argon2 openssl
+    sudo pacman -Sy --noconfirm argon2 openssl
     log_warn "У вас Arch Linux, если в скрипте будут появляться ошибки, попробуйте перезагрузить систему!"
 elif [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" || "$DISTRO" == "pop" || "$DISTRO" == "mint" ]]; then
     sudo apt update
@@ -168,6 +168,110 @@ while true; do
     echo -n "."
     sleep 3
 done
+
+# ==========================================
+print_separator
+log_info "Применение системных настроек ядра Linux..."
+
+if ! lsmod | grep -q wireguard && ! lsmod | grep -q amneziawg; then
+    log_error "Модуль wireguard/amneziawg не загружен."
+    exit 1
+fi
+
+add_sysctl_param() {
+    local param="$1"
+    local value="$2"
+    local line="${param}=${value}"
+
+    if grep -qE "^[[:space:]]*${param}=" /etc/sysctl.conf; then
+        sed -i "s|^[[:space:]]*${param}=.*|${line}|" /etc/sysctl.conf
+        echo -e "  [Ядро] Обновлён параметр: ${YELLOW}${line}${NC}"
+    else
+        echo "$line" >> /etc/sysctl.conf
+        echo -e "  [Ядро] Добавлен параметр: ${GREEN}${line}${NC}"
+    fi
+}
+
+add_sysctl_param "net.ipv4.ip_forward" "1"
+add_sysctl_param "net.ipv4.conf.all.src_valid_mark" "1"
+add_sysctl_param "net.ipv6.conf.all.disable_ipv6" "0"
+add_sysctl_param "net.ipv6.conf.all.forwarding" "1"
+add_sysctl_param "net.ipv6.conf.default.forwarding" "1"
+sudo sysctl -p > /dev/null
+
+log_info "Настройка брандмауэра iptables..."
+
+DEFAULT_IF=$(ip route show default 2>/dev/null | awk '/default/ {print $5; exit}')
+if [ -z "$DEFAULT_IF" ]; then
+    log_error "Не удалось определить внешний интерфейс. Правила MASQUERADE не будут применены."
+    DEFAULT_IF="eth0"
+else
+    log_info "Внешний интерфейс: ${DEFAULT_IF}"
+fi
+
+add_iptables_rule() {
+    local chain="$1"
+    shift
+    if ! sudo iptables -C "$chain" "$@" 2>/dev/null; then
+        sudo iptables -A "$chain" "$@"
+        echo -e "  [iptables] Добавлено правило: ${chain} $*"
+    else
+        echo -e "  [iptables] Правило уже существует: ${chain} $*"
+    fi
+}
+
+add_iptables_rule FORWARD -i wg0 -j ACCEPT
+add_iptables_rule FORWARD -o wg0 -j ACCEPT
+add_iptables_rule POSTROUTING -t nat -s 10.8.0.0/24 -o "$DEFAULT_IF" -j MASQUERADE
+
+# ==========================================
+log_info "Сохранение правил iptables..."
+saved=false
+
+if command -v netfilter-persistent &>/dev/null; then
+    netfilter-persistent save
+    log_success "Правила сохранены (netfilter-persistent)."
+    saved=true
+else
+    if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" || "$DISTRO" == "pop" || "$DISTRO" == "mint" ]]; then
+        log_warn "netfilter-persistent не найден. Пытаюсь установить iptables-persistent..."
+        sudo apt-get update -qq && sudo apt-get install -y iptables-persistent
+        if command -v netfilter-persistent &>/dev/null; then
+            netfilter-persistent save
+            log_success "Правила сохранены (netfilter-persistent)."
+            saved=true
+        fi
+    elif [[ "$DISTRO" == "centos" || "$DISTRO" == "rhel" || "$DISTRO" == "rocky" || "$DISTRO" == "almalinux" ]]; then
+        log_warn "netfilter-persistent не найден. Пробую iptables-services..."
+        if ! rpm -q iptables-services &>/dev/null; then
+            sudo dnf install -y iptables-services
+        fi
+        sudo service iptables save
+        sudo systemctl enable iptables
+        log_success "Правила сохранены через iptables-services."
+        saved=true
+    elif [[ "$DISTRO" == "arch" ]]; then
+        log_warn "Arch Linux: сохранение через iptables-save..."
+        mkdir -p /etc/iptables
+        iptables-save > /etc/iptables/iptables.rules
+        sudo systemctl enable --now iptables
+        sudo systemctl enable iptables-restore.service
+        log_success "Создан systemd-сервис для восстановления iptables."
+        saved=true
+    else
+        log_warn "Неизвестный дистрибутив. Сохраняю через iptables-save в /etc/iptables/rules.v4"
+        mkdir -p /etc/iptables
+        iptables-save > /etc/iptables/rules.v4
+        log_info "Добавьте восстановление в автозагрузку (например, systemd unit)."
+        saved=true
+    fi
+fi
+
+if [ "$saved" = false ]; then
+    log_error "Не удалось сохранить правила iptables. После перезагрузки они пропадут."
+fi
+
+log_success "Сетевые правила применены."
 
 # ==========================================
 log_info "Запуск основных сервисов..."

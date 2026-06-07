@@ -45,7 +45,4 @@ COPY --from=builder /amneziawg-go/amneziawg-go /usr/bin/
 COPY scripts/amnezia-client_init.sh /init.sh
 RUN chmod +x /init.sh
 
-HEALTHCHECK --interval=1m --timeout=5s --retries=3 \
-    CMD /usr/bin/timeout 5s /bin/sh -c "awg show | grep interface || exit 1"
-
 ENTRYPOINT ["/usr/bin/dumb-init", "/init.sh"]

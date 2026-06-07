@@ -24,7 +24,8 @@ services:
         limits:
           memory: 1.5G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8008/_matrix/client/versions"]
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8008/_matrix/client/versions"]
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -58,6 +59,7 @@ services:
     logging: *default-logging
     ports:
       - "80:80"
+      - "8080:8080"
     restart: unless-stopped
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
@@ -197,7 +199,11 @@ services:
         limits:
           memory: 1.5G
     healthcheck:
-      test: ["CMD-SHELL", "test -f /var/www/html/config/config.php && php occ status"]
+      test:
+        [
+          "CMD-SHELL",
+          "test -f /var/www/html/config/config.php && php occ status",
+        ]
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -571,7 +577,7 @@ services:
       - net.ipv6.conf.all.forwarding=1
       - net.ipv6.conf.default.forwarding=1
     healthcheck:
-      test: ["CMD", "awg", "show", "wg0"]
+      test: ["CMD-SHELL", "awg show | grep interface || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3

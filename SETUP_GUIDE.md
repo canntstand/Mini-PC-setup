@@ -7,21 +7,21 @@
 1. Обновить все пакеты (к прим. sudo apt update && sudo apt upgrade).
 2. Настроить SSH + пользователей по плану ниже.
 3. Установить [Docker Engine](https://docs.docker.com/engine/install/)
-4. `sudo systemctl enable --now docker`
-5. Установить Git -> `git clone https://github.com/canntstand/ServeHub-2 && cd ServeHub-2`
-6. Создать `.env` по примеру `.env.example` (на обоих серверах файлы должны быть идентичные).
+4. Установить [AmneziaWG Kernel Module](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module)
+5. `sudo systemctl enable --now docker`
+6. Установить Git -> `git clone https://github.com/canntstand/ServeHub-2 && cd ServeHub-2`
+7. Создать `.env` по примеру `.env.example` (на обоих серверах файлы должны быть идентичные).
 
 ## 2. На удаленном сервере
-1. Установить [AmneziaWG Kernel Module](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module)
-2. `chmod +x scripts/setup_remote.sh && sudo ./scripts/setup_remote.sh`
-3. `ssh -L 51821:127.0.0.1:51821 user@ip`
-4. Перейти в браузере по `http://127.0.0.1:51821` в WireGuard панель. Cоздать админ пользователя и всех клиентов (в зависимости от того сколько устройств планируется подключить к VPN).
-5. Скачать конфиг клиента, которому принадлежит IP `10.8.0.2` (чтобы подключить локальный сервер).
+1. `chmod +x scripts/setup_remote.sh && sudo ./scripts/setup_remote.sh`
+2. `ssh -L 51821:127.0.0.1:51821 user@ip`
+3. Перейти в браузере по `http://127.0.0.1:51821` в WireGuard панель. Cоздать админ пользователя и всех клиентов (в зависимости от того сколько устройств планируется подключить к VPN).
+4. Скачать конфиг клиента, которому принадлежит IP `10.8.0.2` (чтобы подключить локальный сервер).
 
 ## 3. На локальном сервере
 1. Перенести конфиг на локальный сервер можно через scp (к прим. `scp ~/Downloads/awg0.conf user@ip:~/ServeHub-2/amnezia-data/`)
-1. Положить скопированный WireGuard конфиг в папку `amnezia-data/` и назвать файл `awg0.conf`.
-2. `chmod +x scripts/setup_local.sh && ./scripts/setup_local.sh`.
+2. Положить скопированный WireGuard конфиг в папку `amnezia-data/` и назвать файл `awg0.conf`.
+3. `chmod +x scripts/setup_local.sh && ./scripts/setup_local.sh`.
 
 ## SSH (стоит настроить и на локальном сервере, и на удаленном vps)
 1. ПРЕДУСТАНОВКА (Если вы зашли на чистый сервер под пользователем root): Создать нового пользователя `sudo adduser user`, добавить его в группу администраторов `sudo usermod -aG sudo user` и переключиться через `su - user`.
