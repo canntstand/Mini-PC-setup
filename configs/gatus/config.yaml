@@ -1,15 +1,35 @@
 web:
   port: 8080
-  
+
+alerting:
+  email:
+    host: "${SMTP_HOST}"
+    port: ${SMTP_PORT}
+    username: "${SMTP_USER}"
+    password: "${SMTP_PASSWORD}"
+    from: "${SMTP_FROM}"
+    to: "${SMTP_TO}"
+    ssl: true 
+
 endpoints:
   - name: "Is Local Server Alive?"
     url: "http://host.docker.internal:8080/health-check"
     interval: 60s
     conditions:
       - "[STATUS] == 200"
+    alerts:
+      - type: email
+        failure-threshold: 3
+        success-threshold: 2
+        description: "Локальный домашний сервер ServeHub недоступен!"
 
   - name: "Is VPS Server Alive?"
     url: "http://host.docker.internal:8080/vps-health-check"
     interval: 60s
     conditions:
       - "[STATUS] == 200"
+    alerts:
+      - type: email
+        failure-threshold: 3
+        success-threshold: 2
+        description: "Критический сбой: Веб-окружение VPS не отвечает!"

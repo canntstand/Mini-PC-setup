@@ -7,7 +7,7 @@ x-logging: &default-logging
 services:
   synapse:
     container_name: synapse
-    image: matrixdotorg/synapse:latest
+    image: matrixdotorg/synapse:v1.154.0
     restart: unless-stopped
     logging: *default-logging
     expose:
@@ -110,7 +110,7 @@ services:
 
   navidrome:
     container_name: navidrome
-    image: deluan/navidrome:latest
+    image: deluan/navidrome:0.62.0
     restart: unless-stopped
     logging: *default-logging
     expose:
@@ -129,7 +129,7 @@ services:
 
   audiobookshelf:
     container_name: audiobookshelf
-    image: advplyr/audiobookshelf:latest
+    image: advplyr/audiobookshelf:2.35.1 
     logging: *default-logging
     restart: unless-stopped
     expose:
@@ -172,7 +172,7 @@ services:
           memory: 512M
 
   nextcloud:
-    image: nextcloud:stable
+    image: nextcloud:33.0.5-fpm-alpine
     container_name: nextcloud
     logging: *default-logging
     restart: unless-stopped
@@ -216,7 +216,7 @@ services:
       start_period: 30s
 
   nextcloud_cron:
-    image: nextcloud:stable
+    image: nextcloud:33.0.5-fpm-alpine
     container_name: nextcloud_cron
     restart: unless-stopped
     volumes:
@@ -256,7 +256,7 @@ services:
           memory: 512M
 
   vaultwarden:
-    image: vaultwarden/server:latest
+    image: vaultwarden/server:1.36.0
     container_name: vaultwarden
     logging: *default-logging
     restart: unless-stopped
@@ -279,7 +279,7 @@ services:
           memory: 512M
 
   prometheus_init:
-    image: alpine:latest
+    image: alpine:3.22.4
     container_name: prometheus_init
     restart: "no"
     logging: *default-logging
@@ -300,7 +300,7 @@ services:
           memory: 512M
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3
     container_name: prometheus
     logging: *default-logging
     restart: unless-stopped
@@ -325,7 +325,7 @@ services:
           memory: 512M
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.0-slim
     container_name: grafana
     logging: *default-logging
     restart: unless-stopped
@@ -351,7 +351,7 @@ services:
           memory: 512M
 
   node_exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.11.1
     container_name: node_exporter
     logging: *default-logging
     restart: unless-stopped
@@ -374,7 +374,7 @@ services:
           memory: 512M
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.54.1
+    image: gcr.io/cadvisor/cadvisor:v0.57.0
     container_name: cadvisor
     logging: *default-logging
     restart: unless-stopped
@@ -400,7 +400,7 @@ services:
           memory: 512M
 
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:2.39.3
     container_name: portainer
     logging: *default-logging
     restart: unless-stopped
@@ -416,7 +416,7 @@ services:
           memory: 512M
 
   monitoring_configure:
-    image: alpine:3.20
+    image: alpine:3.22.4
     container_name: monitoring_configure
     logging: *default-logging
     volumes:
@@ -471,7 +471,7 @@ services:
         condition: service_completed_successfully
 
   matrix_alertmanager:
-    image: jaywink/matrix-alertmanager:latest
+    image: jaywink/matrix-alertmanager:v0.9.0
     container_name: matrix_alertmanager
     logging: *default-logging
     restart: unless-stopped
@@ -502,7 +502,7 @@ services:
         condition: service_completed_successfully
 
   alertmanager:
-    image: prom/alertmanager:v0.27.0
+    image: prom/alertmanager:v0.32.2
     container_name: alertmanager
     logging: *default-logging
     restart: unless-stopped

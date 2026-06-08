@@ -2,8 +2,6 @@
 
 echo "Установка и настройка системы защиты Fail2ban..."
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     DISTRO=$ID
@@ -30,7 +28,7 @@ else
     exit 1
 fi
 
-sudo cp "$SCRIPT_DIR/fail2ban/jail.local" /etc/fail2ban/jail.local
+sudo cp ./configs/fail2ban/jail.local /etc/fail2ban/jail.local
 
 sudo systemctl enable --now fail2ban
 sudo systemctl restart fail2ban
