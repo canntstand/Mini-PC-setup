@@ -549,6 +549,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    depends_on:
+      monitoring_configure:
+        condition: service_completed_successfully
 
 volumes:
   synapse_db_data:
