@@ -23,6 +23,7 @@
 1. Перенести конфиг на локальный сервер можно через scp (к прим. `scp ~/Downloads/awg0.conf user@ip:~/ServeHub-2/amnezia-data/`)
 2. Положить скопированный WireGuard конфиг в файл `./configs/amnezia/awg0.conf`.
 3. `chmod +x scripts/setup_local.sh && sudo ./scripts/setup_local.sh`.
+4. Если по какой-то причине нужно удалить проект, после остановки сервисов выполнить: `sudo ip link delete awg0 2>/dev/null` (иначе может не быть интернета)
 
 ## SSH (стоит настроить и на локальном сервере, и на удаленном vps)
 1. ПРЕДУСТАНОВКА (Если вы зашли на чистый сервер под пользователем root): Создать нового пользователя `sudo adduser user`, добавить его в группу администраторов `sudo usermod -aG sudo user` и переключиться через `su - user`.
