@@ -191,9 +191,15 @@ services:
       - OVERWRITEWEBROOT=/nextcloud
       - OVERWRITEPROTOCOL=https
       - HTACCESS_OVERRIDE_CURRENT=1
+      - NEXTCLOUD_TRUSTED_DOMAINS=${SYNAPSE_SERVER_NAME}
+      - TRUSTED_PROXIES=172.16.0.0/12 10.8.0.0/24
+      - NC_maintenance_window_start=2
+      - NC_default_phone_region=RU
+      - NC_filelocking.enabled=true
+      - 'NC_memcache.local=\OC\Memcache\APCu'
     volumes:
       - ./nextcloud/html:/var/www/html
-      - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
+      - ./nextcloud/data:/var/www/html/data
     deploy:
       resources:
         limits:
@@ -215,7 +221,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./nextcloud/html:/var/www/html
-      - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
+      - ./nextcloud/data:/var/www/html/data
     entrypoint: /cron.sh
     logging: *default-logging
     depends_on:
@@ -225,44 +231,6 @@ services:
       resources:
         limits:
           memory: 256M
-
-  nextcloud_configure:
-    image: nextcloud:stable
-    container_name: nextcloud_configure
-    logging: *default-logging
-    restart: "no"
-    user: www-data
-    depends_on:
-      nextcloud:
-        condition: service_healthy
-    volumes:
-      - ./nextcloud/html:/var/www/html
-      - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
-    entrypoint: /bin/sh
-    command: >
-      -c "
-      echo 'Applying system fixes...';
-
-      php occ config:system:set trusted_domains 1 --value='${SYNAPSE_SERVER_NAME}';
-      php occ config:system:set trusted_proxies 0 --value='172.16.0.0/12';
-
-      php occ config:system:set maintenance_window_start --value=2 --type=int;
-      php occ background-job:set cron;
-
-      php occ config:system:set default_phone_region --value='RU';
-      php occ config:system:set filelocking.enabled --value=true --type=boolean;
-      php occ config:system:set memcache.local --value='\\OC\\Memcache\\APCu';
-        
-      echo 'Applying migrations and htaccess...';
-      php occ maintenance:repair --include-expensive --no-interaction;
-      php occ maintenance:update:htaccess;
-        
-      echo 'Configuration applied successfully!';
-      "
-    deploy:
-      resources:
-        limits:
-          memory: 512M
 
   vaultwarden_db:
     image: postgres:18
@@ -442,6 +410,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./portainer/data:/data
+    secrets:
+      - portainer_key
+    environment:
+      - PORTAINER_ENCRYPTION_KEY_FILE=/run/secrets/portainer_key
     command: --base-url=/portainer/
     deploy:
       resources:
@@ -583,3 +555,7 @@ volumes:
   synapse_db_data:
   nextcloud_db_data:
   vaultwarden_db_data:
+
+secrets:
+  portainer_key:
+    file: ./secrets/portainer_key

@@ -148,10 +148,15 @@ log_success "Конфигурация Synapse создана."
 # ==========================================
 log_info "Генерация хэша пароля Vaultwarden..."
 SALT=$(openssl rand -hex 8)
-HASH_TOKEN=$(echo -n "$SECRET_VAULTWARDEN_PASSWORD" | argon2 "$SALT" -e -id -k 19456 -t 2 -p 1 | sed 's/\$/\$\$/g')
+HASH_TOKEN=$(echo -n "$SECRET_VAULTWARDEN_PASSWORD" | argon2 "$SALT" -e -id -k 19456 -t 2 -p 1)
 sed -i '/^VAULTWARDEN_ADMIN_HASH=/d' .env
-echo "VAULTWARDEN_ADMIN_HASH=${HASH_TOKEN}" >> .env
+printf 'VAULTWARDEN_ADMIN_HASH=%s\n' "$HASH_TOKEN" >> .env
 log_success "Хэш Vaultwarden добавлен в .env."
+
+# ==========================================
+log_info "Генерация ключа шифрования Portainer..."
+mkdir -p secrets
+openssl rand -base64 32 > secrets/portainer_key
 
 # ==========================================
 log_info "Запуск сервиса настройки мониторинга..."
@@ -188,12 +193,6 @@ if ! echo "$modules" | grep -q amneziawg; then
     fi
 else
     log_success "Модуль amneziawg уже загружен."
-fi
-
-
-if ! echo "$modules" | grep -q amneziawg; then
-    echo "Модуль amneziawg не доступен после попытки загрузки."
-    exit 1
 fi
 
 add_sysctl_param() {
