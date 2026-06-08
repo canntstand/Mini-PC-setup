@@ -8,4 +8,4 @@ datasources:
     jsonData:
       httpMethod: POST
       version: 1
-      scrapecInterval: 15s
+      scrapeInterval: 15s

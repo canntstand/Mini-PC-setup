@@ -13,7 +13,7 @@ services:
     expose:
       - 8008
     volumes:
-      - ./matrix/data:/data
+      - ./apps-data/synapse:/data
     depends_on:
       synapse_db:
         condition: service_healthy
@@ -64,8 +64,8 @@ services:
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     volumes:
-      - ./nginx/templates/nginx.local.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/www:/usr/share/nginx/html:ro
+      - ./configs/nginx/templates/nginx.local.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./configs/nginx/www:/usr/share/nginx/html:ro
     depends_on:
       synapse:
         condition: service_healthy
@@ -120,7 +120,7 @@ services:
       ND_LOGLEVEL: "info"
       ND_BASEURL: "/navidrome"
     volumes:
-      - ./navidrome/data:/data
+      - ./apps-data/navidrome/data:/data
       - /home/${HOME_USER_NAME}/Music:/music:ro
     deploy:
       resources:
@@ -138,8 +138,8 @@ services:
       - AUDIOBOOKSHELF_PORT=80
       - AUDIOBOOKSHELF_BASE_PATH=/audiobookshelf
     volumes:
-      - ./audiobookshelf/config:/config
-      - ./audiobookshelf/metadata:/metadata
+      - ./apps-data/audiobookshelf/config:/config
+      - ./apps-data/audiobookshelf/metadata:/metadata
       - /home/${HOME_USER_NAME}/Audiobooks:/audiobooks
       - /home/${HOME_USER_NAME}/Podcasts:/podcasts
       - /home/${HOME_USER_NAME}/Books:/books
@@ -198,8 +198,8 @@ services:
       - NC_filelocking.enabled=true
       - 'NC_memcache.local=\OC\Memcache\APCu'
     volumes:
-      - ./nextcloud/html:/var/www/html
-      - ./nextcloud/data:/var/www/html/data
+      - ./apps-data/nextcloud/html:/var/www/html
+      - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
     deploy:
       resources:
         limits:
@@ -220,8 +220,8 @@ services:
     container_name: nextcloud_cron
     restart: unless-stopped
     volumes:
-      - ./nextcloud/html:/var/www/html
-      - ./nextcloud/data:/var/www/html/data
+      - ./apps-data/nextcloud/html:/var/www/html
+      - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
     entrypoint: /cron.sh
     logging: *default-logging
     depends_on:
@@ -272,7 +272,7 @@ services:
       - WEBSOCKET_ENABLED=true
       - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_HASH}
     volumes:
-      - ./vaultwarden/data:/data
+      - ./apps-data/vaultwarden/data:/data
     deploy:
       resources:
         limits:
@@ -285,8 +285,8 @@ services:
     logging: *default-logging
     user: "root"
     volumes:
-      - ./prometheus:/mnt/prometheus
-      - ./grafana:/mnt/grafana
+      - ./apps-data/prometheus:/mnt/prometheus
+      - ./apps-data/grafana:/mnt/grafana
     command: >
       sh -c "
       mkdir -p /mnt/prometheus/data && 
@@ -309,10 +309,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
-      - ./monitoring/targets.json:/etc/prometheus/targets.json:ro
-      - ./prometheus/data:/prometheus
+      - ./configs/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - ./apps-data/prometheus/data:/prometheus
     depends_on:
       prometheus_init:
         condition: service_completed_successfully
@@ -338,9 +337,9 @@ services:
       - GF_SECURITY_ADMIN_USER=${ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD}
     volumes:
-      - ./grafana/data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./apps-data/grafana/data:/var/lib/grafana
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       prometheus_init:
         condition: service_completed_successfully
@@ -409,7 +408,7 @@ services:
       - 9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./portainer/data:/data
+      - ./apps-data/portainer/data:/data
     secrets:
       - portainer_key
     environment:
@@ -425,7 +424,7 @@ services:
     container_name: monitoring_configure
     logging: *default-logging
     volumes:
-      - ./monitoring:/mnt/monitoring
+      - ./configs/monitoring:/mnt/monitoring
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - MATRIX_BOT_USERNAME=${MATRIX_BOT_USERNAME}
@@ -481,7 +480,7 @@ services:
     logging: *default-logging
     restart: unless-stopped
     volumes:
-      - ./monitoring:/mnt/monitoring:ro
+      - ./configs/monitoring:/mnt/monitoring:ro
     environment:
       - MATRIX_HOMESERVER_URL=http://synapse:8008
       - MATRIX_USER=@${MATRIX_BOT_USERNAME}:${SYNAPSE_SERVER_NAME}
@@ -512,7 +511,7 @@ services:
     logging: *default-logging
     restart: unless-stopped
     volumes:
-      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./configs/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
     expose:
@@ -540,7 +539,7 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - ./amnezia-data:/config
+      - ./configs/amnezia:/config
       - /lib/modules:/lib/modules:ro
     logging: *default-logging
     network_mode: "host"

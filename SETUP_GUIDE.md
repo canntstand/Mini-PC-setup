@@ -20,7 +20,7 @@
 
 ## 3. На локальном сервере
 1. Перенести конфиг на локальный сервер можно через scp (к прим. `scp ~/Downloads/awg0.conf user@ip:~/ServeHub-2/amnezia-data/`)
-2. Положить скопированный WireGuard конфиг в папку `amnezia-data/` и назвать файл `awg0.conf`.
+2. Положить скопированный WireGuard конфиг в папку `configs/amnezia/` и назвать файл `awg0.conf`.
 3. `chmod +x scripts/setup_local.sh && sudo ./scripts/setup_local.sh`.
 
 ## SSH (стоит настроить и на локальном сервере, и на удаленном vps)

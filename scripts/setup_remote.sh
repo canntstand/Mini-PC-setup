@@ -117,23 +117,23 @@ log_success "Файл окружения валидирован."
 
 # ==========================================
 print_separator
-GATUS_CONFIG_FILE="./gatus/config/config.yaml"
+GATUS_CONFIG_FILE="./configs/gatus/config.yaml"
 if [ ! -f "$GATUS_CONFIG_FILE" ]; then
     log_error "КРИТИЧЕСКАЯ ОШИБКА: Конфигурация $GATUS_CONFIG_FILE отсутствует!"
     exit 1
 fi
 
-CERT_DIR="./certs/live/${SYNAPSE_SERVER_NAME}"
+CERT_DIR="./certbot/certs/live/${SYNAPSE_SERVER_NAME}"
 
-if [ ! -d "./certbot-dns-webnames" ]; then
-    git clone https://github.com/regtime-ltd/certbot-dns-webnames.git ./certbot-dns-webnames
+if [ ! -d "./certbot/certbot-dns-webnames" ]; then
+    git clone https://github.com/regtime-ltd/certbot-dns-webnames.git ./certbot/certbot-dns-webnames
 fi
 
 log_info "Загрузка конфигурации Certbot от Webnames..."
-if curl -s -o ./certbot-dns-webnames/config.sh \
+if curl -s -o ./certbot/certbot-dns-webnames/config.sh \
     "https://www.webnames.ru/scripts/json_domain_zone_manager.pl?action=get_config_certbot&domain=${SYNAPSE_SERVER_NAME}&apikey=${WEBNAMES_APIKEY}"; then
-    if [ -s ./certbot-dns-webnames/config.sh ]; then
-        chmod +x ./certbot-dns-webnames/*.sh
+    if [ -s ./certbot/certbot-dns-webnames/config.sh ]; then
+        chmod +x ./certbot/certbot-dns-webnames/*.sh
         log_success "Конфигурация получена."
     else
         log_error "Получен пустой файл конфигурации."

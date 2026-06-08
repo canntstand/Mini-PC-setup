@@ -14,9 +14,9 @@ services:
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     volumes:
-      - ./nginx/templates/nginx.remote.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/www:/usr/share/nginx/html:ro
-      - ./certs:/etc/letsencrypt:ro
+      - ./configs/nginx/templates/nginx.remote.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./configs/nginx/www:/usr/share/nginx/html:ro
+      - ./certbot/certs:/etc/letsencrypt:ro
       - ./certbot/www:/var/www/certbot:ro
     deploy:
       resources:
@@ -39,9 +39,9 @@ services:
     container_name: certbot
     logging: *default-logging
     volumes:
-      - ./certs:/etc/letsencrypt
-      - ./certs-data:/var/lib/letsencrypt
-      - ./certbot-dns-webnames:/opt/certbot-dns-webnames
+      - ./certbot/certs:/etc/letsencrypt
+      - ./certbot/certs-data:/var/lib/letsencrypt
+      - ./certbot/certbot-dns-webnames:/opt/certbot-dns-webnames
     environment:
       - SYNAPSE_SERVER_NAME=${SYNAPSE_SERVER_NAME}
     command: >
@@ -85,7 +85,7 @@ services:
       - INIT_HOST=${SERVER_IP}
       - INIT_PORT=51820
     volumes:
-      - ./config:/etc/wireguard
+      - ./configs/wg-easy:/etc/wireguard
       - /lib/modules:/lib/modules:ro
     network_mode: "host"
     restart: unless-stopped
@@ -109,8 +109,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ./gatus/config:/config
-      - ./gatus/data:/data
+      - ./configs/gatus:/config
+      - ./apps-data/gatus/data:/data
     environment:
       - TZ=Europe/Moscow
       - ADMIN_USER=${ADMIN_USER}
