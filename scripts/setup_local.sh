@@ -154,15 +154,6 @@ EOF
 
 sudo chown -R 991:991 apps-data/synapse/
 log_success "Конфигурация Synapse создана."
-
-# ==========================================
-log_info "Генерация хэша пароля Vaultwarden..."
-SALT=$(openssl rand -hex 8)
-HASH_TOKEN=$(echo -n "$SECRET_VAULTWARDEN_PASSWORD" | argon2 "$SALT" -e -id -k 19456 -t 2 -p 1)
-
-sed -i '/^ADMIN_TOKEN=/d' .env.vaultwarden-hash
-printf 'ADMIN_TOKEN=%s\n' "$HASH_TOKEN" >> .env.vaultwarden-hash
-log_success "Хэш Vaultwarden добавлен в .env.vaultwarden-hash."
 # ==========================================
 log_info "Генерация ключа шифрования Portainer..."
 mkdir -p secrets
