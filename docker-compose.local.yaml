@@ -409,10 +409,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./apps-data/portainer/data:/data
-    secrets:
-      - portainer_key
-    environment:
-      - PORTAINER_ENCRYPTION_KEY_FILE=/run/secrets/portainer_key
     command: --base-url=/portainer/
     deploy:
       resources:
@@ -557,7 +553,3 @@ volumes:
   synapse_db_data:
   nextcloud_db_data:
   vaultwarden_db_data:
-
-secrets:
-  portainer_key:
-    file: ./secrets/portainer_key

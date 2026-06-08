@@ -155,11 +155,6 @@ EOF
 sudo chown -R 991:991 apps-data/synapse/
 log_success "Конфигурация Synapse создана."
 # ==========================================
-log_info "Генерация ключа шифрования Portainer..."
-mkdir -p secrets
-openssl rand -base64 32 > secrets/portainer_key
-
-# ==========================================
 log_info "Запуск сервиса настройки мониторинга..."
 docker compose -f docker-compose.local.yaml up -d monitoring_configure
 
