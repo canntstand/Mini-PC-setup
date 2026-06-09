@@ -1,5 +1,6 @@
 web:
-  port: 8080
+  address: "127.0.0.1"
+  port: 51822
 
 alerting:
   email:
@@ -9,7 +10,7 @@ alerting:
     password: "${SMTP_PASSWORD}"
     from: "${SMTP_FROM}"
     to: "${SMTP_TO}"
-    ssl: true 
+    ssl: true
 
 endpoints:
   - name: "Is Local Server Alive?"

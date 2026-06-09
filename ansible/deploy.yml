@@ -1,0 +1,30 @@
+- name: "Bootstrap: Первичная подготовка операционных систем"
+  hosts: vps, local
+  gather_facts: no
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    ansible_user: root
+  tags: bootstrap
+  tasks:
+    - name: "Python: Проверка и установка Python3 (необходим для работы Ansible)"
+      raw: |
+        if command -v apt-get >/dev/null; then
+            apt-get update && apt-get install -y python3
+        elif command -v pacman >/dev/null; then
+            pacman -Sy --noconfirm python3
+        else
+            echo "Unsupported distribution" >&2
+            exit 1
+        fi
+      changed_when: false
+    - name: "Facts: Сбор системных фактов после проверки Python"
+      setup:
+
+    - name: "Bootstrap: Запуск сценария базовой настройки"
+      include_tasks: tasks/bootstrap_os.yml
+  handlers:
+    - name: Restart SSH
+      systemd:
+        name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
+        state: restarted

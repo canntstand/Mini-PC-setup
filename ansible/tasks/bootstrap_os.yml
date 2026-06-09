@@ -1,0 +1,167 @@
+# =========================================================================
+# ПОДГОТОВКА ПЕРЕМЕННЫХ
+# =========================================================================
+- name: "Определение целевого пользователя для текущего хоста (VPS)"
+  set_fact:
+    deploy_user: "{{ vps_user }}"
+  when: "'vps' in group_names"
+
+- name: "Определение целевого пользователя для текущего хоста (Local)"
+  set_fact:
+    deploy_user: "{{ local_user }}"
+  when: "'local' in group_names"
+
+# =========================================================================
+# ПУНКТ 1: ОБНОВЛЕНИЕ СИСТЕМЫ
+# =========================================================================
+- name: "APT: Обновление кэша и пакетов (Ubuntu/Debian)"
+  apt:
+    update_cache: yes
+    upgrade: safe
+  when: ansible_os_family == "Debian"
+
+- name: "PACMAN: Обновление системы (Arch Linux)"
+  pacman:
+    update_cache: yes
+    upgrade: yes
+    extra_args: --noconfirm
+  when: ansible_os_family == "Archlinux"
+
+# =========================================================================
+# ПУНКТ 2: НАСТРОЙКА SSH И ПОЛЬЗОВАТЕЛЕЙ
+# =========================================================================
+- name: "Юзер: Создание пользователя {{ deploy_user }} и добавление в группы"
+  user:
+    name: "{{ deploy_user }}"
+    shell: /bin/bash
+    groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
+    append: yes
+    state: present
+
+- name: "Sudoers: Настройка беспарольного sudo для {{ deploy_user }} (чтобы Ansible мог работать дальше)"
+  lineinfile:
+    path: /etc/sudoers.d/90-ansible-users
+    line: "{{ deploy_user }} ALL=(ALL) NOPASSWD:ALL"
+    validate: '/usr/sbin/visudo -cf %s'
+    create: yes
+    mode: '0440'
+
+- name: "SSH: Проброс публичного SSH-ключа"
+  authorized_key:
+    user: "{{ deploy_user }}"
+    state: present
+    key: "{{ ssh_public_key }}"
+
+- name: "SSH Конфиг: Настройка параметров безопасности в основном файле"
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  loop:
+    - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+    - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+    - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' }
+    - { regexp: '^#?PermitEmptyPasswords', line: 'PermitEmptyPasswords no' }
+  notify: Restart SSH
+
+- name: "SSH Конфиг: Проверка наличия директории sshd_config.d"
+  stat:
+    path: /etc/ssh/sshd_config.d
+  register: sshd_d_dir
+
+- name: "SSH Конфиг: Поиск дополнительных файлов конфигурации в sshd_config.d"
+  find:
+    paths: /etc/ssh/sshd_config.d
+    patterns: "*.conf"
+  register: sshd_dropins
+  when: sshd_d_dir.stat.exists and sshd_d_dir.stat.isdir
+
+- name: "SSH Конфиг: Отключение PasswordAuthentication во всех вложенных файлах .conf"
+  lineinfile:
+    path: "{{ item.path }}"
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    state: present
+  loop: "{{ sshd_dropins.files | default([]) }}"
+  notify: Restart SSH
+  when: >
+    sshd_d_dir.stat.exists and 
+    sshd_d_dir.stat.isdir and 
+    sshd_dropins.matched is defined and 
+    sshd_dropins.matched > 0
+
+- name: "Fail2ban: Установка пакета (Ubuntu/Debian)"
+  apt:
+    name: fail2ban
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: "Fail2ban: Установка пакета (Arch Linux)"
+  pacman:
+    name: fail2ban
+    state: present
+  when: ansible_os_family == "Archlinux"
+
+- name: "Fail2ban: Копирование вашего кастомного jail.local"
+  copy:
+    src: "../configs/fail2ban/jail.local"
+    dest: "/etc/fail2ban/jail.local"
+    owner: root
+    group: root
+    mode: '0644'
+  register: fail2ban_config
+
+- name: "Fail2ban: Включение автозагрузки и запуск службы"
+  systemd:
+    name: fail2ban
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+  when: fail2ban_config.changed
+
+# =========================================================================
+# ПУНКТ 3: УСТАНОВКА DOCKER
+# =========================================================================
+- name: "Docker: Установка зависимостей репозитория (Ubuntu/Debian)"
+  apt:
+    name: [apt-transport-https, ca-certificates, curl, gnupg, lsb-release]
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: "Docker: Добавление официального GPG ключа Docker (Ubuntu/Debian)"
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: "Docker: Добавление официального APT репозитория (Ubuntu/Debian)"
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: "Docker: Установка Docker Engine и Compose Plugin (Ubuntu/Debian)"
+  apt:
+    name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+    update_cache: yes
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: "Docker: Установка Docker и Compose (Arch Linux)"
+  pacman:
+    name: [docker, docker-compose]
+    state: present
+  when: ansible_os_family == "Archlinux"
+
+- name: "Docker: Включение автозагрузки и запуск демона Docker"
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: "Docker: Добавление пользователя {{ deploy_user }} в группу docker (чтобы запускать контейнеры без sudo)"
+  user:
+    name: "{{ deploy_user }}"
+    groups: docker
+    append: yes
