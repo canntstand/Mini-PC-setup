@@ -145,10 +145,10 @@ else
 fi
 
 NEED_REAL_CERT=false
-if [ ! -f "${CERT_DIR}/fullchain.pem" ]; then
+if ! sudo test -f "${CERT_DIR}/fullchain.pem"; then
     log_info "SSL-сертификаты не найдены. Будет запрошен новый."
     NEED_REAL_CERT=true
-elif ! openssl x509 -checkend 2592000 -noout -in "${CERT_DIR}/fullchain.pem" >/dev/null 2>&1; then
+elif ! sudo openssl x509 -checkend 2592000 -noout -in "${CERT_DIR}/fullchain.pem" 2>/dev/null; then
     log_warn "Сертификат истекает скоро. Будет обновлён."
     NEED_REAL_CERT=true
 else
@@ -159,7 +159,7 @@ if [ "$NEED_REAL_CERT" = true ]; then
     log_info "Запуск Certbot для получения сертификатов..."
     sudo docker compose -f docker-compose.remote.yaml build certbot
     
-    if [ ! -f "${CERT_DIR}/fullchain.pem" ]; then
+    if ! sudo test -f "${CERT_DIR}/fullchain.pem"; then
         sudo docker compose -f docker-compose.remote.yaml run --rm certbot
     else
         sudo docker compose -f docker-compose.remote.yaml run --rm certbot renew --non-interactive
@@ -184,12 +184,6 @@ if ! echo "$modules" | grep -q amneziawg; then
     fi
 else
     log_success "Модуль amneziawg уже загружен."
-fi
-
-
-if ! echo "$modules" | grep -q amneziawg; then
-    echo "Модуль amneziawg не доступен после попытки загрузки."
-    exit 1
 fi
 
 add_sysctl_param() {
