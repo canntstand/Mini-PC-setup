@@ -1,5 +1,5 @@
 - name: "Bootstrap: Первичная подготовка операционных систем"
-  hosts: "{{ bootstrap_target | default('vps, local') }}"
+  hosts: vps, local
   gather_facts: no
   vars_files:
     - vars/secrets.yml
@@ -35,6 +35,20 @@
     - vars/secrets.yml
   become: yes
   tasks:
+    - name: "VPS | Проверка наличия папки репозитория"
+      ansible.builtin.stat:
+        path: "/home/{{ vps_user }}/ServeHub-2"
+      register: vps_repo_dir
+    
+    - name: "VPS | Клонирование репозитория, если он отсутствует"
+      ansible.builtin.git:
+        repo: 'https://github.com/canntstand/ServeHub-2'
+        dest: "/home/{{ vps_user }}/ServeHub-2"
+        clone: yes
+        update: yes
+      become_user: "{{ vps_user }}"
+      when: not vps_repo_dir.stat.exists
+
     - name: "Запуск скрипта настройки удаленного сервера"
       shell: "chmod +x scripts/setup_remote.sh && ./scripts/setup_remote.sh"
       args:
@@ -66,6 +80,20 @@
     - vars/secrets.yml
   become: yes
   tasks:
+    - name: "Local | Проверка наличия папки репозитория"
+      ansible.builtin.stat:
+        path: "/home/{{ local_user }}/ServeHub-2"
+      register: local_repo_dir
+
+    - name: "Local | Клонирование репозитория, если он отсутствует"
+      ansible.builtin.git:
+        repo: 'https://github.com/canntstand/ServeHub-2'
+        dest: "/home/{{ local_user }}/ServeHub-2"
+        clone: yes
+        update: yes
+      become_user: "{{ local_user }}"
+      when: not local_repo_dir.stat.exists
+
     - name: "Запуск скрипта настройки локального сервера"
       shell: "chmod +x scripts/setup_local.sh && ./scripts/setup_local.sh"
       args:
