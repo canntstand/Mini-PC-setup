@@ -52,9 +52,12 @@
     - name: "Запуск скрипта настройки удаленного сервера"
       shell: |
         chmod +x scripts/setup_remote.sh
-        ./scripts/setup_remote.sh 2>&1 | tee /home/{{ vps_user }}/setup_remote.log; exit ${PIPESTATUS[0]}
+        ./scripts/setup_remote.sh 2>&1 | tee /home/{{ vps_user }}/setup_remote.log
       args:
         chdir: "/home/{{ vps_user }}/ServeHub-2"
+        executable: /bin/bash
+      register: script_result
+      failed_when: script_result.rc != 0
 
 - name: "Ожидание конфигурации WireGuard"
   hosts: localhost
