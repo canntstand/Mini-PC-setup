@@ -4,14 +4,14 @@
 2. **Настройка DNS:** В DNS-панели регистратора (например, на Webnames) необходимо направить A-запись основного домена и wildcard-запись (`*`) на внутренний IP-адрес VPN — **`10.8.0.1`**. Это критически важно: весь трафик к вашим сервисам должен идти внутри защищенного туннеля AmneziaWG. Если направить домен на публичный IP сервера VPS, Nginx заблокирует внешние запросы из-за правила `deny all`.
 
 ## Установка
-1. Создать файл `ansible/vars/secrets.yaml` на основе примера `ansible/vars/secrets.yaml.example`.
-2. Установить `Docker` + `wsl --install`
-3. Создать ssh ключ `ssh-keygen -t ed25519 -C "your_email@example.com"`
-4. Зайти в терминал WSL
-4. В wsl выполнить `mkdir -p ~/.ssh && cp /mnt/c/Users/ВАШЕ_ИМЯ_ПОЛЬЗОВАТЕЛЯ/.ssh/id_ed25519 ~/.ssh/ && chmod 600 ~/.ssh/id_ed25519`
-5. Клонировать репозиторий: `git clone https://github.com/canntstand/ServeHub-2 && cd ServeHub-2`
-6. Запустить файл: `./manage_deploy.sh` (при первой установке лучше выбрать 1 пункт)
-7. Остальные шаги сообщит скрипт
+1. Клонировать репозиторий: `git clone https://github.com/canntstand/ServeHub-2 && cd ServeHub-2`
+2. Создать файл `ansible/vars/secrets.yaml` на основе примера `ansible/vars/secrets.yaml.example`.
+3. Установить `Docker`, `git bash`, `ssh` `wsl --install`
+4. Создать ssh ключ `ssh-keygen -t ed25519 -C "your_email@example.com"`
+5. Зайти в терминал WSL
+6. В wsl выполнить `mkdir -p ~/.ssh && cp /mnt/c/Users/ВАШЕ_ИМЯ_ПОЛЬЗОВАТЕЛЯ/.ssh/id_ed25519 ~/.ssh/ && chmod 600 ~/.ssh/id_ed25519` 
+7. Запустить файл: `./manage_deploy.sh` (при первой установке лучше выбрать 1 пункт)
+8. Остальные шаги сообщит скрипт
 
 ## Пользование сервисами
 1. **Вход на портал:** После успешного запуска перейдите по вашему домену на главную страницу (веб-портал), предварительно включив VPN-клиент AmneziaWG на вашем устройстве.

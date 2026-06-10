@@ -80,7 +80,7 @@ while IFS= read -r line || [ -n "$line" ]; do
     export "$var_name_clean"="$var_value"
 done < "$ENV_FILE"
 
-required_vars=("SECRET_VAULTWARDEN_PASSWORD" "SYNAPSE_SERVER_NAME" "WEBNAMES_APIKEY" "HOME_USER_NAME")
+required_vars=("SECRET_VAULTWARDEN_PASSWORD" "SYNAPSE_SERVER_NAME" "WEBNAMES_APIKEY" "LOCAL_USER")
 for var in "${required_vars[@]}"; do
     if [ -z "${!var:-}" ]; then
         log_error "Не задана обязательная переменная $var в .env!"
@@ -106,8 +106,8 @@ done
 
 sudo chmod -R 777 ./apps-data
 
-sudo mkdir -p "/home/${HOME_USER_NAME}/NextcloudData"
-sudo chown -R 33:33 "/home/${HOME_USER_NAME}/NextcloudData"
+sudo mkdir -p "/home/${LOCAL_USER}/NextcloudData"
+sudo chown -R 33:33 "/home/${LOCAL_USER}/NextcloudData"
 log_success "Директории подготовлены."
 
 # ==========================================

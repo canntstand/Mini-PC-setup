@@ -121,7 +121,7 @@ services:
       ND_BASEURL: "/navidrome"
     volumes:
       - ./apps-data/navidrome/data:/data
-      - /home/${HOME_USER_NAME}/Music:/music:ro
+      - /home/${LOCAL_USER}/Music:/music:ro
     deploy:
       resources:
         limits:
@@ -129,7 +129,7 @@ services:
 
   audiobookshelf:
     container_name: audiobookshelf
-    image: advplyr/audiobookshelf:2.35.1 
+    image: advplyr/audiobookshelf:2.35.1
     logging: *default-logging
     restart: unless-stopped
     expose:
@@ -140,9 +140,9 @@ services:
     volumes:
       - ./apps-data/audiobookshelf/config:/config
       - ./apps-data/audiobookshelf/metadata:/metadata
-      - /home/${HOME_USER_NAME}/Audiobooks:/audiobooks
-      - /home/${HOME_USER_NAME}/Podcasts:/podcasts
-      - /home/${HOME_USER_NAME}/Books:/books
+      - /home/${LOCAL_USER}/Audiobooks:/audiobooks
+      - /home/${LOCAL_USER}/Podcasts:/podcasts
+      - /home/${LOCAL_USER}/Books:/books
     deploy:
       resources:
         limits:
@@ -199,7 +199,7 @@ services:
       - 'NC_memcache.local=\OC\Memcache\APCu'
     volumes:
       - ./apps-data/nextcloud/html:/var/www/html
-      - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
+      - /home/${LOCAL_USER}/NextcloudData:/var/www/html/data
     deploy:
       resources:
         limits:
@@ -221,7 +221,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./apps-data/nextcloud/html:/var/www/html
-      - /home/${HOME_USER_NAME}/NextcloudData:/var/www/html/data
+      - /home/${LOCAL_USER}/NextcloudData:/var/www/html/data
     entrypoint: /cron.sh
     logging: *default-logging
     depends_on:

@@ -125,6 +125,14 @@ fi
 
 CERT_DIR="./certbot/certs/live/${SYNAPSE_SERVER_NAME}"
 
+USER_CERT_DIR="/home/${LOCAL_USER}/certbot/certs/live/${SYNAPSE_SERVER_NAME}"
+if [ -f "${USER_CERT_DIR}/fullchain.pem" ]; then
+    log_info "Сертификаты найдены в домашней директории пользователя, копирую в проект..."
+    sudo cp -r "/home/${LOCAL_USER}/certbot/" "."
+    sudo chown -R $(id -u):$(id -g) "./certbot/"
+    log_success "Сертификаты скопированы."
+fi
+
 if [ ! -d "./certbot/certbot-dns-webnames" ]; then
     git clone https://github.com/regtime-ltd/certbot-dns-webnames.git ./certbot/certbot-dns-webnames
 fi

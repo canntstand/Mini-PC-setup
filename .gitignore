@@ -2,3 +2,4 @@
 .venv
 ansible/vars/secrets.yml
 ansible/inventory.ini
+certbot

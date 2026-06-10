@@ -67,7 +67,7 @@ services:
     container_name: wg-easy
     environment:
       - LANG=en
-      - WG_HOST=${SERVER_IP}
+      - WG_HOST=${VPS_PUBLIC_IP}
       - PORT=51821
       - WG_PORT=51820
       - WEBROOT_BIND_ADDRESS=127.0.0.1
@@ -82,7 +82,7 @@ services:
       - INIT_ENABLED=true
       - INIT_USERNAME=${ADMIN_USER}
       - INIT_PASSWORD=${ADMIN_PASSWORD}
-      - INIT_HOST=${SERVER_IP}
+      - INIT_HOST=${VPS_PUBLIC_IP}
       - INIT_PORT=51820
     volumes:
       - ./configs/wg-easy:/etc/wireguard
