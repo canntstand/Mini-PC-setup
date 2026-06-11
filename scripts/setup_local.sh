@@ -248,7 +248,7 @@ if command -v netfilter-persistent &>/dev/null; then
 else
     if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" || "$DISTRO" == "pop" || "$DISTRO" == "mint" ]]; then
         log_warn "netfilter-persistent не найден. Пытаюсь установить iptables-persistent..."
-        sudo apt-get update -qq && sudo apt-get install -y iptables-persistent
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y iptables-persistent
         if command -v netfilter-persistent &>/dev/null; then
             netfilter-persistent save
             log_success "Правила сохранены (netfilter-persistent)."
@@ -263,17 +263,18 @@ else
         sudo systemctl enable iptables
         log_success "Правила сохранены через iptables-services."
         saved=true
-   elif [[ "$DISTRO" == "arch" || "$DISTRO" == "endeavouros" ]]; then
-        log_warn "Arch/EndeavourOS: сохранение через iptables-save..."
+    elif [[ "$DISTRO" == "arch" ]]; then
+        log_warn "Arch Linux: сохранение через iptables-save..."
         mkdir -p /etc/iptables
         iptables-save > /etc/iptables/iptables.rules
         sudo systemctl enable --now iptables
-        log_success "Сервис iptables успешно добавлен в автозагрузку."
+        sudo systemctl enable iptables-restore.service
+        log_success "Создан systemd-сервис для восстановления iptables."
         saved=true
     else
         log_warn "Неизвестный дистрибутив. Сохраняю через iptables-save в /etc/iptables/rules.v4"
         mkdir -p /etc/iptables
-        iptables-save > /etc/iptables/rules.v4
+        sudo iptables-save | sudo tee /etc/iptables/rules.v4 > /dev/null
         log_info "Добавьте восстановление в автозагрузку (например, systemd unit)."
         saved=true
     fi

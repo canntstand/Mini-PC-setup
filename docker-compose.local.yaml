@@ -374,7 +374,7 @@ services:
           memory: 512M
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.57.0
+    image: ghcr.io/google/cadvisor:0.57
     container_name: cadvisor
     logging: *default-logging
     restart: unless-stopped

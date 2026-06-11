@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 cd "$PROJECT_ROOT"
 
 if ! command -v docker &> /dev/null; then
@@ -21,9 +21,11 @@ if ! docker compose version &> /dev/null; then
     exit 1
 fi
 
+DEBUG_ARGS=""
+
 run_ansible() {
     local args="$@"
-    docker compose -f docker-compose.ansible.yaml run --rm ansible sh -c "ansible-playbook ${args}"
+    docker compose -f docker-compose.ansible.yaml run --rm ansible sh -c "ansible-playbook ${args} ${DEBUG_ARGS}"
 }
 
 check_inventory() {
@@ -47,12 +49,27 @@ show_header() {
     echo -e "${BLUE}======================================================================${NC}"
     echo -e "${BLUE}          🚀 Интерактивный мастер деплоя: ServeHub-2${NC}"
     echo -e "${BLUE}======================================================================${NC}"
-    echo -e "Выберите сценарий развертывания инфраструктуры:"
-    echo ""
 }
 
 show_header
 
+read -p "Включить подробный режим отладки (дебаг) -vvv? [y/N / д/Н]: " -n 1 DEBUG_CHOICE
+echo ""
+
+case "$DEBUG_CHOICE" in
+    [yY]|[дД])
+        DEBUG_ARGS="-vvv"
+        echo -e "${YELLOW}⚙️ Режим дебага (-vvv) активирован.${NC}\n"
+        ;;
+    *)
+        DEBUG_ARGS=""
+        echo -e "${GREEN}ℹ️ Обычный режим вывода логов.${NC}\n"
+        ;;
+esac
+
+
+echo -e "Выберите сценарий развертывания инфраструктуры:"
+echo ""
 echo -e "1) ${GREEN}Полная установка с нуля (VPS + Локальный)${NC}"
 echo -e "   • Подготовит ОС на VPS и локальном сервере (пароль root)."
 echo -e "   • Запустит сервисы на VPS, затем паузу для WireGuard, затем сервисы на локальном сервере."
@@ -71,10 +88,13 @@ echo -e "----------------------------------------------------------------------"
 echo -e "5) ${YELLOW}Только разворачивание приложений (Локальный) + Ожидание WireGuard, без bootstrap${NC}"
 echo -e "   • Пауза для WireGuard и запуск сервисов на локальном сервере (ОС уже настроена)."
 echo -e "----------------------------------------------------------------------"
-echo -e "6) ${RED}Выход из мастера деплоя${NC}"
+echo -e "6) ${GREEN}Только разворачивание приложений (VPS + Локальный), без bootstrap${NC}"
+echo -e "   • Развернет сервисы на VPS, сделает паузу для WireGuard и настроит локальный сервер."
+echo -e "----------------------------------------------------------------------"
+echo -e "7) ${RED}Выход из мастера деплоя${NC}"
 echo ""
 
-read -p "Введите номер варианта [1-6]: " CHOICE
+read -p "Введите номер варианта [1-7]: " CHOICE
 
 check_inventory
 check_secrets
@@ -113,6 +133,13 @@ case $CHOICE in
         run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit local,localhost --skip-tags bootstrap"
         ;;
     6)
+        echo -e "\n${BLUE}>>> [1/2] Разворачивание сервисов на VPS (без bootstrap)...${NC}"
+        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit vps --skip-tags bootstrap"
+
+        echo -e "\n${BLUE}>>> [2/2] Пауза WireGuard и разворачивание сервисов на локальном сервере (без bootstrap)...${NC}"
+        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit local,localhost --skip-tags bootstrap"
+        ;;
+    7)
         echo -e "\n${RED}Выход.${NC}"
         exit 0
         ;;

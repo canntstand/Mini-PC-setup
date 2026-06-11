@@ -3,14 +3,7 @@
   gather_facts: no
   vars_files:
     - vars/secrets.yml
-
-  vars_prompt:
-    - name: "typed_password"
-      prompt: "Введите SSH пароль (для root или {{ vps_user }})"
-      private: yes
-
   tags: bootstrap
-
   pre_tasks:
     - name: "Проверка: Доступен ли root?"
       ansible.builtin.ping:
@@ -30,10 +23,8 @@
         - root_auth_check.unreachable is not defined
         - root_auth_check.failed is not defined
 
-    - name: "Логика: Настройка подключения под обычным пользователем"
+    - name: "Логика: Настройка беспарольного/парольного sudo для обычного юзера"
       set_fact:
-        ansible_user: "{{ vps_user if 'vps' in group_names else local_user }}"
-        ansible_password: "{{ user_pass }}"
         ansible_become: yes
         ansible_become_method: sudo
         ansible_become_password: "{{ user_pass }}"
