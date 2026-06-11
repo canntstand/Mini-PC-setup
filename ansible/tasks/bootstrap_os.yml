@@ -26,9 +26,9 @@
   lineinfile:
     path: /etc/sudoers.d/90-ansible-users
     line: "{{ deploy_user }} ALL=(ALL) NOPASSWD:ALL"
-    validate: '/usr/sbin/visudo -cf %s'
+    validate: "/usr/sbin/visudo -cf %s"
     create: yes
-    mode: '0440'
+    mode: "0440"
 
 # =========================================================================
 # ПУНКТ 2: ОБНОВЛЕНИЕ СИСТЕМЫ И УСТАНОВКА БАЗОВЫХ ПАКЕТОВ
@@ -149,10 +149,10 @@
     line: "{{ item.line }}"
     state: present
   loop:
-    - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
-    - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
-    - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' }
-    - { regexp: '^#?PermitEmptyPasswords', line: 'PermitEmptyPasswords no' }
+    - { regexp: "^#?PasswordAuthentication", line: "PasswordAuthentication no" }
+    - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
+    - { regexp: "^#?MaxAuthTries", line: "MaxAuthTries 3" }
+    - { regexp: "^#?PermitEmptyPasswords", line: "PermitEmptyPasswords no" }
   notify: Restart SSH
 
 - name: "SSH Конфиг: Проверка наличия директории sshd_config.d"
@@ -170,8 +170,8 @@
 - name: "SSH Конфиг: Отключение PasswordAuthentication во всех вложенных файлах .conf"
   lineinfile:
     path: "{{ item.path }}"
-    regexp: '^#?PasswordAuthentication'
-    line: 'PasswordAuthentication no'
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication no"
     state: present
   loop: "{{ sshd_dropins.files | default([]) }}"
   notify: Restart SSH
@@ -194,7 +194,7 @@
     dest: "/etc/fail2ban/jail.local"
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   register: fail2ban_config
 
 - name: "Fail2ban: Включение автозагрузки и запуск службы"
@@ -210,7 +210,16 @@
 # =========================================================================
 - name: "Docker: Удаление старых конфликтующих пакетов (Ubuntu/Debian)"
   apt:
-    name: [docker.io, docker-compose, docker-compose-v2, docker-doc, podman-docker, containerd, runc]
+    name:
+      [
+        docker.io,
+        docker-compose,
+        docker-compose-v2,
+        docker-doc,
+        podman-docker,
+        containerd,
+        runc,
+      ]
     state: absent
     purge: yes
   when: ansible_facts['os_family'] == "Debian"
@@ -225,14 +234,14 @@
   file:
     path: /etc/apt/keyrings
     state: directory
-    mode: '0755'
+    mode: "0755"
   when: ansible_facts['os_family'] == "Debian"
 
 - name: "Docker: Скачивание официального GPG ключа"
   get_url:
     url: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
     dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
+    mode: "0644"
   when: ansible_facts['os_family'] == "Debian"
 
 - name: "Docker: Добавление официального репозитория с привязкой ключа (Signed-By)"
@@ -244,7 +253,14 @@
 
 - name: "Docker: Установка Docker Engine и плагина Compose (Ubuntu/Debian)"
   apt:
-    name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+    name:
+      [
+        docker-ce,
+        docker-ce-cli,
+        containerd.io,
+        docker-buildx-plugin,
+        docker-compose-plugin,
+      ]
     update_cache: yes
     state: present
   when: ansible_facts['os_family'] == "Debian"
@@ -282,16 +298,16 @@
 - name: "Ubuntu/Debian: Установка утилит сборки и заголовков текущего ядра"
   apt:
     name:
-        - software-properties-common
-        - python3-launchpadlib
-        - gnupg2
-        - "linux-headers-{{ ansible_facts['kernel'] }}"
+      - software-properties-common
+      - python3-launchpadlib
+      - gnupg2
+      - "linux-headers-{{ ansible_facts['kernel'] }}"
     state: present
   when: ansible_facts['os_family'] == "Debian"
 
 - name: "Ubuntu: Добавление официального PPA AmneziaWG"
   apt_repository:
-    repo: 'ppa:amnezia/ppa'
+    repo: "ppa:amnezia/ppa"
     state: present
   when: ansible_facts['distribution'] == "Ubuntu"
 
@@ -321,7 +337,7 @@
 # =========================================================================
 - name: "Клонирование репозитория ServeHub-2"
   git:
-    repo: 'https://github.com/canntstand/ServeHub-2'
+    repo: "https://github.com/canntstand/ServeHub-2"
     dest: "/home/{{ deploy_user }}/ServeHub-2"
     clone: yes
     update: yes
@@ -334,4 +350,4 @@
     dest: "/home/{{ deploy_user }}/ServeHub-2/.env"
     owner: "{{ deploy_user }}"
     group: "{{ deploy_user }}"
-    mode: '0600'
+    mode: "0600"

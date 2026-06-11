@@ -3,26 +3,63 @@
   gather_facts: no
   vars_files:
     - vars/secrets.yml
-  vars:
-    ansible_user: root
+
+  vars_prompt:
+    - name: "typed_password"
+      prompt: "Введите SSH пароль (для root или {{ vps_user }})"
+      private: yes
+
   tags: bootstrap
+
+  pre_tasks:
+    - name: "Проверка: Доступен ли root с введенным паролем?"
+      wait_for:
+        host: "{{ ansible_host | default(inventory_hostname) }}"
+        port: 22
+        timeout: 2
+      delegate_to: localhost
+      register: root_check
+      ignore_errors: yes
+      vars:
+        ansible_user: root
+        ansible_password: "{{ typed_password }}"
+
+    - name: "Логика: Настройка подключения под root"
+      set_fact:
+        ansible_user: root
+        ansible_password: "{{ typed_password }}"
+        ansible_become: no
+      when: root_check is success
+
+    - name: "Логика: Настройка подключения под обычным пользователем"
+      set_fact:
+        ansible_user: "{{ vps_user if 'vps' in group_names else local_user }}"
+        ansible_password: "{{ typed_password }}"
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_become_password: "{{ typed_password }}"
+      when: root_check is failed
+
   tasks:
     - name: "Python: Проверка и установка Python3 (необходим для работы Ansible)"
       raw: |
+        if [ "$USER" != "root" ]; then SUDO="sudo"; else SUDO=""; fi
         if command -v apt-get >/dev/null; then
-            apt-get update && apt-get install -y python3
+            $SUDO apt-get update && $SUDO apt-get install -y python3
         elif command -v pacman >/dev/null; then
-            pacman -Sy --noconfirm python3
+            $SUDO pacman -Sy --noconfirm python3
         else
             echo "Unsupported distribution" >&2
             exit 1
         fi
       changed_when: false
+
     - name: "Facts: Сбор системных фактов после проверки Python"
       setup:
 
     - name: "Bootstrap: Запуск сценария базовой настройки"
       include_tasks: tasks/bootstrap_os.yml
+
   handlers:
     - name: Restart SSH
       systemd:
@@ -103,6 +140,6 @@
     - name: "Запуск скрипта настройки локального сервера"
       shell: |
         chmod +x scripts/setup_local.sh
-        ./scripts/setup_local.sh 2>&1 | tee /home/{{ local_user }}/setup_local.log; exit ${PIPESTATUS[0]}
+        ./scripts/setup_local.sh 2>&1 | tee /home/{{ local_user }}/setup_local.log
       args:
         chdir: "/home/{{ local_user }}/ServeHub-2"

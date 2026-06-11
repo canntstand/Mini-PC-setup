@@ -82,7 +82,7 @@ check_secrets
 case $CHOICE in
     1)
         echo -e "\n${BLUE}>>> [1/3] Первичная подготовка VPS и локального сервера (пароль root)...${NC}"
-        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit vps,local -k -u root --tags bootstrap -vvv"
+        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit vps,local --tags bootstrap -vvv"
 
         echo -e "\n${BLUE}>>> [2/3] Разворачивание сервисов на VPS...${NC}"
         run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit vps --skip-tags bootstrap -vvv"
@@ -92,14 +92,14 @@ case $CHOICE in
         ;;
     2)
         echo -e "\n${BLUE}>>> [1/2] Первичная подготовка VPS (пароль root)...${NC}"
-        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit vps -k -u root --tags bootstrap -vvv"
+        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit vps --tags bootstrap -vvv"
 
         echo -e "\n${BLUE}>>> [2/2] Разворачивание сервисов на VPS...${NC}"
         run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit vps --skip-tags bootstrap -vvv"
         ;;
     3)
         echo -e "\n${BLUE}>>> [1/2] Первичная подготовка локального сервера (пароль root)...${NC}"
-        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit local -k -u root --tags bootstrap -vvv"
+        run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit local --tags bootstrap -vvv"
 
         echo -e "\n${BLUE}>>> [2/2] Пауза WireGuard и настройка локального сервера...${NC}"
         run_ansible "-i ansible/inventory.ini ansible/deploy.yml --limit local,localhost --skip-tags bootstrap -vvv"
